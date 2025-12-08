@@ -82,7 +82,21 @@ wymagają autoryzacji za pomocą tokenu JWT przekazywanego w nagłówku
 \subsection{Modele bazy danych}
 
 System wykorzystuje bazę SQLite z trzema głównymi modelami. 
-Listing~\ref{lst:models} przedstawia definicje modeli SQLAlchemy.
+Listing~\ref{lst:models} przedstawia definicje modeli.
+
+Modele bazy danych wykorzystują relacje typu jeden–do–wielu. 
+Model \texttt{User} reprezentuje użytkownika systemu i przechowuje jego
+dane logowania oraz listę prowadzonych rozmów. Każdy użytkownik może
+mieć wiele rozmów.
+
+Model \texttt{Conversation} definiuje pojedynczą rozmowę związaną z
+konkretnym użytkownikiem. Oprócz tytułu zawiera informację o pliku
+dokumentu, na podstawie którego generowane są odpowiedzi systemu.
+
+Model \texttt{Message} przechowuje wiadomości należące do danej rozmowy. Dodatkowymi polami są
+kategoria pytania oraz źródła informacji wykorzystane przy generowaniu
+odpowiedzi przez model językowy.
+
 
 \begin{lstlisting}[language=Python, caption={Modele bazy danych}, label={lst:models}]
 class User(db.Model):
@@ -106,27 +120,24 @@ class Conversation(db.Model):
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'))
-    role = db.Column(db.String(20))  # 'user' lub 'assistant'
+    role = db.Column(db.String(20))
     content = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(50))
     sources = db.Column(db.JSON)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 \end{lstlisting}
 
-Relacje między modelami:
-\begin{itemize}
-    \item \texttt{User} $\rightarrow$ \texttt{Conversation} -- jeden użytkownik 
-    może mieć wiele konwersacji
-    \item \texttt{Conversation} $\rightarrow$ \texttt{Message} -- jedna konwersacja 
-    zawiera wiele wiadomości (pytania i odpowiedzi)
-\end{itemize}
-
 \newpage
 \subsection{System autoryzacji}
 
-Autoryzacja oparta jest na tokenach JWT (JSON Web Token). 
-Listing~\ref{lst:auth} przedstawia dekorator sprawdzający autoryzację.
+System autoryzacji opiera się na tokenach JWT (JSON Web Token), które
+pozwalają na uwierzytelnianie użytkowników bez konieczności
+ponownego logowania, token traci ważność po 24 godzinach. Przechowuje on również
+identyfikator użytkownika. Po wysłaniu żądania token jest przekazywany w nagłówku HTTP \texttt{Authorization}.
 
+Listing~\ref{lst:auth} przedstawia dekorator \texttt{@token\_required},
+który weryfikuje poprawność tokenu przed wykonaniem chronionych
+endpointów.
 \begin{lstlisting}[language=Python, caption={Dekorator autoryzacji JWT}, label={lst:auth}]
 def token_required(f):
     @wraps(f)
@@ -151,9 +162,6 @@ def token_required(f):
     return decorated
 \end{lstlisting}
 
-Token JWT zawiera identyfikator użytkownika oraz czas wygaśnięcia 
-(domyślnie 24 godziny). Dekorator \texttt{@token\_required} jest 
-stosowany do wszystkich chronionych endpointów.
 
 \newpage
 \subsection{Pipeline RAG}

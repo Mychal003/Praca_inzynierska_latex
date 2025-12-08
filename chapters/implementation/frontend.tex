@@ -4,25 +4,23 @@ z myślą o intuicyjności, czytelności odpowiedzi oraz możliwości
 zarządzania wieloma konwersacjami.
 
 \subsection{Struktura frontendu}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{images/implementation/front_dir.png}
+    \caption{Struktura plików frontend}
+    \label{fig:frontend_structure}
+\end{figure}
 
-\dirtree{%
-.1 frontend/.
-.2 index.html.
-.2 static/.
-.3 css/.
-.4 style.css.
-.3 js/.
-.4 auth.js.
-.4 app.js.
-}
-
-Główne pliki aplikacji:
+Rysunek Rysunek~\ref{fig:frontend_structure} przedstawia główne pliki aplikacji:
 \begin{itemize}
     \item \texttt{index.html} -- struktura HTML z ekranami logowania i chatu
     \item \texttt{auth.js} -- obsługa autoryzacji (JWT, logowanie, rejestracja)
     \item \texttt{app.js} -- logika chatu i zarządzanie konwersacjami
     \item \texttt{style.css} -- style CSS z ciemnym motywem
 \end{itemize}
+
+
+
 
 \subsection{Interfejs użytkownika}
 
@@ -35,7 +33,7 @@ Interfejs składa się z trzech głównych ekranów:
     oraz pole do wpisywania pytań
 \end{enumerate}
 \newpage
-Rysunki~\ref{fig:login_screen} i~\ref{fig:register_screen} przedstawiają ekran logowania oraz rejestracji.
+
 
 \begin{figure}[H]
 \centering
@@ -51,11 +49,10 @@ Rysunki~\ref{fig:login_screen} i~\ref{fig:register_screen} przedstawiają ekran 
 \label{fig:register_screen}
 \end{figure}
 
+Rysunki~\ref{fig:login_screen} i~\ref{fig:register_screen} przedstawiają ekran logowania oraz rejestracji.
 
 \newpage
-Po zalogowaniu użytkownik widzi interfejs z bocznym panelem zawierającym 
-listę swoich konwersacji. Rysunek~\ref{fig:upload_screen} przedstawia 
-ekran uploadu dokumentu.
+
 
 \begin{figure}[H]
 \centering
@@ -64,10 +61,11 @@ ekran uploadu dokumentu.
 \label{fig:upload_screen}
 \end{figure}
 
+Po zalogowaniu użytkownik widzi interfejs z bocznym panelem zawierającym 
+listę swoich konwersacji. Rysunek~\ref{fig:upload_screen} przedstawia 
+ekran uploadu dokumentu.
 
-Po przesłaniu dokumentu użytkownik przechodzi do interfejsu chatu 
-przedstawionego na rysunku~\ref{fig:chat_screen}. Panel boczny 
-umożliwia przełączanie między konwersacjami oraz tworzenie nowych.
+
 
 \begin{figure}[H]
 \centering
@@ -75,6 +73,10 @@ umożliwia przełączanie między konwersacjami oraz tworzenie nowych.
 \caption{Interfejs chatu z historią konwersacji}
 \label{fig:chat_screen}
 \end{figure}
+
+Po przesłaniu dokumentu użytkownik przechodzi do interfejsu chatu 
+przedstawionego na rysunku~\ref{fig:chat_screen}. Panel boczny 
+umożliwia przełączanie między konwersacjami oraz tworzenie nowych.
 
 \newpage
 \subsection{System autoryzacji}
@@ -115,7 +117,18 @@ const Auth = {
     }
 };
 \end{lstlisting}
+Powyższy listing przedstawia główne funkcje modułu \texttt{auth.js}:
 
+\begin{itemize}
+    \item \textbf{getToken()} -- pobiera aktualny token JWT z pamięci lokalnej
+    \item \textbf{setToken(token)} -- zapisuje token JWT w pamięci lokalnej
+    \item \textbf{getHeaders()} -- przygotowuje nagłówki HTTP z tokenem dla żądań
+    \item \textbf{login(username, password)} -- wysyła dane logowania do API,
+    odbiera token JWT i zapisuje go w lokalnej pamięci
+\end{itemize}
+
+Dzięki temu moduł umożliwia bezpieczne uwierzytelnianie użytkowników
+oraz ochronę chronionych endpointów w aplikacji.
 \newpage
 \subsection{Zarządzanie konwersacjami}
 

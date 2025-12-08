@@ -287,7 +287,7 @@ Proces przygotowania datasetu był półautomatyczny: model językowy
 ekstrahował odpowiedzi i annotował istotne fragmenty, a następnie 
 wyniki były weryfikowane pod kątem poprawności.
 
-
+\iffalse
 \section{Plan eksperymentów}\label{sec:experiment-plan}
 
 \subsection{Badane parametry}
@@ -308,6 +308,8 @@ parametrów systemu RAG:
     między sąsiednimi fragmentami. Testowane wartości: 0, 50, 100, 
     200, 300 znaków.
 \end{enumerate}
+
+
 
 \subsection{Metodyka eksperymentów}
 
@@ -334,8 +336,8 @@ Wszystkie eksperymenty wykorzystywały następującą konfigurację bazową:
     \item Model generacji: GPT-4o (temperature=0)
     \item Metryka podobieństwa: cosine similarity
 \end{itemize}
-
-
+\fi
+\iffalse
 \section{Proces ewaluacji}\label{sec:evaluation-pipeline}
 
 \begin{figure}[H]
@@ -344,7 +346,7 @@ Wszystkie eksperymenty wykorzystywały następującą konfigurację bazową:
 \caption{Pipeline ewaluacji systemu RAG}
 \label{fig:evaluation-pipeline}
 \end{figure}
-
+\fi
 \subsection{Przygotowanie datasetu}
 
 Skrypt  przetwarza dokument PDF oraz generuje 
@@ -390,7 +392,7 @@ podziału dokumentu.
 
 Skrypt \texttt{evaluate\_generation.py} z flagą \texttt{--llm-judge} 
 przeprowadza szczegółową ewaluację dla optymalnej konfiguracji 
-wyłonionej w eksperymentach.
+wyłonionej na podstawie literatury.
 
 \begin{enumerate}
     \item System generuje odpowiedź dla każdego pytania

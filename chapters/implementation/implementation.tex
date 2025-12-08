@@ -1,0 +1,31 @@
+\chapter{Implementacja}\label{chapter:implementation}
+
+Rozdział opisuje szczegóły implementacji systemu RAG do obsługi 
+dokumentacji technicznej. System składa się z backendu napisanego 
+w Pythonie z użyciem frameworka Flask oraz frontendu w postaci 
+aplikacji webowej. Rysunek~\ref{fig:architecture} przedstawia 
+ogólną architekturę systemu.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{images/implementation/architecture.png}
+\caption{Architektura systemu RAG Documentation Assistant}
+\label{fig:architecture}
+\end{figure}
+
+System został podzielony na trzy główne warstwy:
+\begin{itemize}
+    \item \textbf{Warstwa prezentacji} -- interfejs webowy umożliwiający 
+    upload dokumentów i zadawanie pytań
+    \item \textbf{Warstwa API} -- serwer Flask obsługujący żądania HTTP
+    \item \textbf{Warstwa przetwarzania} -- pipeline RAG z bazą wektorową FAISS
+\end{itemize}
+\newpage
+\section{Backend}\label{sec:backend}
+\input{chapters/implementation/backend.tex}
+\newpage
+\section{Frontend}\label{sec:frontend}
+\input{chapters/implementation/frontend.tex}
+
+\section{Demonstracja działania}\label{sec:demo}
+\input{chapters/implementation/demo.tex}

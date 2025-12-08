@@ -1,0 +1,259 @@
+Backend systemu został zaimplementowany w języku Python z wykorzystaniem 
+frameworka Flask. Składa się z kilku głównych modułów: API HTTP, 
+system autoryzacji, modele bazy danych, pipeline RAG oraz klasyfikator pytań.
+
+\subsection{Struktura projektu}
+
+Struktura katalogów backendu przedstawia się następująco:
+
+\dirtree{%
+.1 backend/.
+.2 app.py.
+.2 config.py.
+.2 models.py.
+.2 auth.py.
+.2 database.db.
+.2 src/.
+.3 rag\_pipeline.py.
+.3 pdf\_processor.py.
+.3 query\_classifier.py.
+.3 conversation\_manager.py.
+.2 vectorstores/.
+.2 uploads/.
+}
+
+Główne pliki aplikacji:
+\begin{itemize}
+    \item \texttt{app.py} -- główny plik serwera Flask z endpointami API
+    \item \texttt{config.py} -- konfiguracja aplikacji (klucze, ścieżki)
+    \item \texttt{models.py} -- modele bazy danych SQLAlchemy
+    \item \texttt{auth.py} -- obsługa autoryzacji JWT
+    \item \texttt{conversation\_manager.py} -- zarządzanie historią rozmów
+\end{itemize}
+\newpage
+\subsection{API HTTP}
+
+Serwer Flask udostępnia endpointy REST API podzielone na trzy grupy 
+funkcjonalne. Tabela~\ref{tab:endpoints} przedstawia pełną listę 
+dostępnych endpointów.
+
+\begin{table}[H]
+\centering
+\caption{Endpointy API}
+\label{tab:endpoints}
+\begin{tabular}{|l|l|p{5.5cm}|}
+\hline
+\textbf{Metoda} & \textbf{Endpoint} & \textbf{Opis} \\
+\hline
+\multicolumn{3}{|c|}{\textit{Autoryzacja}} \\
+\hline
+POST & /api/auth/register & Rejestracja nowego użytkownika \\
+\hline
+POST & /api/auth/login & Logowanie i generowanie tokenu JWT \\
+\hline
+GET & /api/auth/me & Pobranie danych zalogowanego użytkownika \\
+\hline
+\multicolumn{3}{|c|}{\textit{Konwersacje}} \\
+\hline
+GET & /api/conversations & Lista konwersacji użytkownika \\
+\hline
+POST & /api/conversations & Utworzenie nowej konwersacji \\
+\hline
+GET & /api/conversations/<id> & Szczegóły konwersacji z wiadomościami \\
+\hline
+DELETE & /api/conversations/<id> & Usunięcie konwersacji \\
+\hline
+\multicolumn{3}{|c|}{\textit{Dokumenty i zapytania}} \\
+\hline
+POST & /api/conversations/<id>/upload & Upload dokumentu PDF \\
+\hline
+POST & /api/conversations/<id>/query & Zadanie pytania do dokumentu \\
+\hline
+GET & /api/health & Sprawdzenie statusu serwera \\
+\hline
+\end{tabular}
+\end{table}
+
+Wszystkie endpointy z grup \textit{Konwersacje} oraz \textit{Dokumenty i zapytania} 
+wymagają autoryzacji za pomocą tokenu JWT przekazywanego w nagłówku 
+\texttt{Authorization: Bearer <token>}.
+
+\newpage
+\subsection{Modele bazy danych}
+
+System wykorzystuje bazę SQLite z trzema głównymi modelami. 
+Listing~\ref{lst:models} przedstawia definicje modeli SQLAlchemy.
+
+\begin{lstlisting}[language=Python, caption={Modele bazy danych}, label={lst:models}]
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    conversations = db.relationship('Conversation', backref='user')
+
+class Conversation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    title = db.Column(db.String(200), default='Nowa rozmowa')
+    document_name = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    messages = db.relationship('Message', backref='conversation')
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'))
+    role = db.Column(db.String(20))  # 'user' lub 'assistant'
+    content = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(50))
+    sources = db.Column(db.JSON)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+\end{lstlisting}
+
+Relacje między modelami:
+\begin{itemize}
+    \item \texttt{User} $\rightarrow$ \texttt{Conversation} -- jeden użytkownik 
+    może mieć wiele konwersacji
+    \item \texttt{Conversation} $\rightarrow$ \texttt{Message} -- jedna konwersacja 
+    zawiera wiele wiadomości (pytania i odpowiedzi)
+\end{itemize}
+
+\newpage
+\subsection{System autoryzacji}
+
+Autoryzacja oparta jest na tokenach JWT (JSON Web Token). 
+Listing~\ref{lst:auth} przedstawia dekorator sprawdzający autoryzację.
+
+\begin{lstlisting}[language=Python, caption={Dekorator autoryzacji JWT}, label={lst:auth}]
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+        
+        if not token:
+            return jsonify({'error': 'Brak tokenu'}), 401
+        
+        user_id = decode_token(token, current_app.config['SECRET_KEY'])
+        if not user_id:
+            return jsonify({'error': 'Token nieprawidlowy'}), 401
+        
+        user = User.query.get(user_id)
+        return f(user, *args, **kwargs)
+    
+    return decorated
+\end{lstlisting}
+
+Token JWT zawiera identyfikator użytkownika oraz czas wygaśnięcia 
+(domyślnie 24 godziny). Dekorator \texttt{@token\_required} jest 
+stosowany do wszystkich chronionych endpointów.
+
+\newpage
+\subsection{Pipeline RAG}
+
+Główna klasa \texttt{RAGPipeline} implementuje proces przetwarzania 
+dokumentu i generowania odpowiedzi. Listing~\ref{lst:rag_init} przedstawia 
+inicjalizację pipeline z konfigurowalnymi parametrami.
+
+\begin{lstlisting}[language=Python, caption={Inicjalizacja RAG Pipeline}, label={lst:rag_init}]
+class RAGPipeline:
+    def __init__(self, chunk_size=800, chunk_overlap=100, k=10):
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+        self.k = k
+        
+        self.pdf_processor = PDFProcessor()
+        self.classifier = QueryClassifier()
+        self.embeddings = OpenAIEmbeddings(
+            model="text-embedding-3-large"
+        )
+        self.llm = ChatOpenAI(model="gpt-4o", temperature=0)
+        self.vectorstore = None
+\end{lstlisting}
+
+Metoda \texttt{process\_document} przetwarza dokument PDF w czterech krokach:
+
+\begin{enumerate}
+    \item \textbf{Ekstrakcja tekstu} -- biblioteka PyMuPDF wyodrębnia 
+    tekst z pliku PDF
+    \item \textbf{Chunking} -- tekst jest dzielony na fragmenty o rozmiarze 
+    800 tokenów z nakładką 100 tokenów
+    \item \textbf{Embeddingi} -- każdy fragment jest przekształcany 
+    w wektor przy użyciu modelu \texttt{text-embedding-3-large}
+    \item \textbf{Indeksowanie} -- wektory są zapisywane w bazie FAISS
+\end{enumerate}
+
+Vector store jest zapisywany na dysku w katalogu \texttt{vectorstores/}, 
+co umożliwia wznawianie konwersacji bez ponownego przetwarzania dokumentu.
+
+\newpage
+\subsection{Klasyfikator pytań}
+
+System wykorzystuje klasyfikator oparty na modelu GPT-4o do 
+kategoryzacji pytań użytkownika na trzy typy:
+
+\begin{itemize}
+    \item \textbf{factual} -- pytania o konkretne fakty i wartości
+    \item \textbf{procedural} -- pytania o instrukcje i procedury
+    \item \textbf{troubleshooting} -- pytania o rozwiązywanie problemów
+\end{itemize}
+
+\begin{lstlisting}[language=Python, caption={Klasyfikator pytań}, label={lst:classifier}]
+class QueryClassifier:
+    CATEGORIES = {
+        "factual": "Pytanie o fakt",
+        "procedural": "Pytanie o instrukcje",
+        "troubleshooting": "Pytanie o problem"
+    }
+    
+    def classify(self, query: str) -> str:
+        prompt = f"""Sklasyfikuj pytanie do kategorii:
+        - factual: pytanie o fakt
+        - procedural: pytanie o instrukcje
+        - troubleshooting: pytanie o problem
+        
+        Pytanie: "{query}"
+        Odpowiedz TYLKO nazwa kategorii."""
+        
+        response = self.llm.invoke(prompt)
+        result = response.content.strip().lower()
+        return result if result in self.CATEGORIES else "factual"
+\end{lstlisting}
+\newpage
+\subsection{Generowanie odpowiedzi}
+
+W zależności od kategorii pytania wybierany jest odpowiedni szablon 
+promptu zoptymalizowany pod dany typ zapytania. Listing~\ref{lst:query} 
+przedstawia metodę generowania odpowiedzi.
+
+\begin{lstlisting}[language=Python, caption={Generowanie odpowiedzi}, label={lst:query}]
+def query(self, question: str) -> str:
+    # 1. Klasyfikuj pytanie
+    category = self.classify_query(question)
+    
+    # 2. Pobierz odpowiedni prompt
+    prompt_template = self._get_prompt_template(category)
+    
+    # 3. Stworz QA chain z retrieverem
+    qa_chain = RetrievalQA.from_chain_type(
+        llm=self.llm,
+        chain_type="stuff",
+        retriever=self.retriever,
+        return_source_documents=True,
+        chain_type_kwargs={"prompt": prompt_template}
+    )
+    
+    # 4. Wygeneruj odpowiedz
+    result = qa_chain({"query": question})
+    return result["result"]
+\end{lstlisting}
+
+Odpowiedź wraz z kategorią i źródłami jest zapisywana w bazie danych 
+jako nowa wiadomość w ramach konwersacji.

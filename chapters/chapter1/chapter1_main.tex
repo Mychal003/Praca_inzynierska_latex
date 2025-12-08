@@ -1,0 +1,400 @@
+\chapter{Metodologia}\label{chapter:methodology}
+
+Ten rozdział przedstawia metodologię przeprowadzonych badań, w tym opis 
+zastosowanych metryk ewaluacji, proces przygotowania danych testowych 
+oraz plan eksperymentów.
+
+\section{Metryki ewaluacji retrieval}\label{sec:retrieval-metrics}
+
+Ewaluacja komponentu wyszukiwania (retrieval) wymaga oceny jakości 
+rankingu zwracanych fragmentów dokumentu. W niniejszej pracy zastosowano 
+następujące metryki.
+
+\subsection{Precision@k}
+
+Precision@k mierzy jaki procent z $k$ najwyżej ocenionych fragmentów 
+jest rzeczywiście istotny dla danego zapytania:
+
+\begin{equation}
+\text{Precision@}k = \frac{|\{d_1, ..., d_k\} \cap R|}{k}
+\end{equation}
+
+gdzie $\{d_1, ..., d_k\}$ to zbiór $k$ zwróconych fragmentów, 
+a $R$ to zbiór wszystkich istotnych fragmentów (ground truth).
+
+Interpretacja: wysoka wartość Precision@k oznacza, że system rzadko 
+zwraca nieistotne fragmenty w top-$k$ wynikach. Wartość 1.0 oznacza, 
+że wszystkie zwrócone fragmenty są istotne.
+
+\subsection{Recall@k}
+
+Recall@k mierzy jaki procent wszystkich istotnych fragmentów został 
+znaleziony w top-$k$ wynikach:
+
+\begin{equation}
+\text{Recall@}k = \frac{|\{d_1, ..., d_k\} \cap R|}{|R|}
+\end{equation}
+
+Interpretacja: wysoka wartość Recall@k oznacza, że system znajduje 
+większość istotnych fragmentów. W kontekście RAG, wysoki recall jest 
+kluczowy, ponieważ brakujące istotne fragmenty mogą prowadzić do 
+niekompletnych odpowiedzi.
+
+\subsection{F1@k}
+
+F1@k to średnia harmoniczna Precision@k i Recall@k, balansująca 
+oba aspekty jakości wyszukiwania:
+
+\begin{equation}
+\text{F1@}k = 2 \cdot \frac{\text{Precision@}k \cdot \text{Recall@}k}{\text{Precision@}k + \text{Recall@}k}
+\end{equation}
+
+Interpretacja: F1@k jest przydatna gdy zależy nam zarówno na precyzji 
+jak i kompletności wyników. Wartość bliska 1.0 oznacza dobry balans 
+między obu metrykami.
+
+\subsection{Mean Reciprocal Rank (MRR)}
+
+MRR mierzy na jakiej pozycji w rankingu znajduje się pierwszy 
+istotny fragment:
+
+\begin{equation}
+\text{MRR} = \frac{1}{\text{rank}_1}
+\end{equation}
+
+gdzie $\text{rank}_1$ to pozycja pierwszego istotnego fragmentu 
+(licząc od 1).
+
+Interpretacja: MRR = 1.0 oznacza, że pierwszy zwrócony fragment 
+jest zawsze istotny. MRR = 0.5 oznacza, że pierwszy istotny fragment 
+jest średnio na drugiej pozycji. Wysoki MRR jest szczególnie ważny 
+w systemach RAG, gdzie pierwszy fragment ma największy wpływ na 
+generowaną odpowiedź.
+
+\subsection{Normalized Discounted Cumulative Gain (NDCG@k)}
+
+NDCG@k uwzględnia zarówno istotność fragmentów jak i ich pozycję 
+w rankingu, przypisując większą wagę fragmentom na wyższych pozycjach:
+
+\begin{equation}
+\text{DCG@}k = \sum_{i=1}^{k} \frac{\text{rel}_i}{\log_2(i+1)}
+\end{equation}
+
+\begin{equation}
+\text{NDCG@}k = \frac{\text{DCG@}k}{\text{IDCG@}k}
+\end{equation}
+
+gdzie $\text{rel}_i$ to istotność fragmentu na pozycji $i$ (0 lub 1), 
+a IDCG@k to idealna wartość DCG (gdy wszystkie istotne fragmenty 
+są na początku rankingu).
+
+Interpretacja: NDCG@k = 1.0 oznacza idealny ranking, gdzie wszystkie 
+istotne fragmenty znajdują się na najwyższych pozycjach. Metryka ta 
+lepiej niż Precision@k oddaje jakość rankingu, ponieważ karze za 
+umieszczanie istotnych fragmentów na niższych pozycjach.
+
+\subsection{Average Precision (AP)}
+
+Average Precision oblicza średnią precyzję po każdym znalezionym 
+istotnym fragmencie:
+
+\begin{equation}
+\text{AP} = \frac{1}{|R|} \sum_{k=1}^{n} \text{Precision@}k \cdot \text{rel}_k
+\end{equation}
+
+gdzie $n$ to całkowita liczba zwróconych fragmentów, a $\text{rel}_k = 1$ 
+jeśli fragment na pozycji $k$ jest istotny.
+
+Interpretacja: AP łączy aspekty precyzji i rankingu, nagradzając 
+systemy które umieszczają istotne fragmenty wysoko w rankingu.
+
+\subsection{Ograniczenia ewaluacji retrieval}
+
+Metryki retrieval (Precision@k, Recall@k, MRR, NDCG) wymagają 
+annotacji istotnych fragmentów dokumentu. Ponieważ annotacje 
+\texttt{relevant\_chunk\_indices} są specyficzne dla konkretnego 
+podziału dokumentu (chunk\_size=800, overlap=100), metryki 
+retrieval obliczono tylko dla konfiguracji bazowej.
+
+Eksperymenty z różnymi wartościami chunk\_size ewaluowano 
+przy użyciu metryk generacji (ROUGE-1 F1, Semantic Similarity), 
+które mierzą jakość końcowej odpowiedzi niezależnie od 
+wewnętrznego podziału dokumentu.
+
+\section{Metryki ewaluacji generacji}\label{sec:generation-metrics}
+
+Ewaluacja jakości generowanych odpowiedzi wymaga porównania z 
+odpowiedziami referencyjnymi (ground truth). Zastosowano metryki 
+leksykalne, semantyczne oraz ocenę przez model językowy.
+
+\subsection{ROUGE-1 F1}
+
+ROUGE (Recall-Oriented Understudy for Gisting Evaluation) mierzy 
+overlap n-gramów między wygenerowaną odpowiedzią a referencją. 
+ROUGE-1 wykorzystuje unigramy (pojedyncze słowa):
+
+\begin{equation}
+\text{ROUGE-1 Precision} = \frac{|\text{unigrams}_{gen} \cap \text{unigrams}_{ref}|}{|\text{unigrams}_{gen}|}
+\end{equation}
+
+\begin{equation}
+\text{ROUGE-1 Recall} = \frac{|\text{unigrams}_{gen} \cap \text{unigrams}_{ref}|}{|\text{unigrams}_{ref}|}
+\end{equation}
+
+\begin{equation}
+\text{ROUGE-1 F1} = 2 \cdot \frac{\text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}
+\end{equation}
+
+Interpretacja: ROUGE-1 F1 mierzy jak dużo słów z odpowiedzi 
+referencyjnej pojawia się w wygenerowanej odpowiedzi i odwrotnie. 
+Wartości powyżej 0.5 wskazują na znaczący overlap słownictwa. 
+Ograniczeniem metryki jest brak uwzględnienia synonimów i parafraz.
+
+\subsection{Semantic Similarity}
+
+Podobieństwo semantyczne wykorzystuje embeddingi tekstowe do 
+porównania znaczenia odpowiedzi, niezależnie od użytych słów:
+
+\begin{equation}
+\text{Semantic Similarity} = \cos(\mathbf{e}_{gen}, \mathbf{e}_{ref}) = \frac{\mathbf{e}_{gen} \cdot \mathbf{e}_{ref}}{||\mathbf{e}_{gen}|| \cdot ||\mathbf{e}_{ref}||}
+\end{equation}
+
+gdzie $\mathbf{e}_{gen}$ i $\mathbf{e}_{ref}$ to wektory embeddingów 
+wygenerowanej odpowiedzi i referencji, utworzone przy użyciu modelu 
+Sentence-BERT (all-mpnet-base-v2).
+
+Interpretacja: wartość 1.0 oznacza identyczne znaczenie semantyczne, 
+0.0 oznacza brak podobieństwa. W praktyce wartości powyżej 0.7 
+wskazują na wysokie podobieństwo semantyczne. Metryka ta lepiej 
+niż ROUGE radzi sobie z parafrazami i synonimami.
+
+\subsection{Token Overlap}
+
+Token Overlap to prostsza metryka mierząca procent wspólnych słów:
+
+\begin{equation}
+\text{Token Overlap} = \frac{|\text{tokens}_{gen} \cap \text{tokens}_{ref}|}{|\text{tokens}_{ref}|}
+\end{equation}
+
+Interpretacja: metryka pomocnicza, przydatna do szybkiej oceny 
+pokrycia słownictwa.
+
+
+\section{LLM-as-a-Judge}\label{sec:llm-judge}
+
+Tradycyjne metryki leksykalne i semantyczne mają ograniczenia w ocenie 
+jakości odpowiedzi. Dlatego zastosowano podejście LLM-as-a-Judge, 
+gdzie model GPT-4o ocenia odpowiedzi w pięciu wymiarach.
+
+\subsection{Wymiary oceny}
+
+\begin{enumerate}
+    \item \textbf{Correctness} (poprawność merytoryczna) -- czy odpowiedź 
+    zawiera prawidłowe informacje zgodne z referencją? Ocena od 0.0 
+    (całkowicie błędna) do 1.0 (w pełni poprawna).
+    
+    \item \textbf{Completeness} (kompletność) -- czy odpowiedź zawiera 
+    wszystkie kluczowe informacje z referencji? Ocena od 0.0 (brak 
+    istotnych informacji) do 1.0 (wszystkie informacje obecne).
+    
+    \item \textbf{Relevance} (istotność) -- czy odpowiedź bezpośrednio 
+    odnosi się do zadanego pytania? Ocena od 0.0 (całkowicie nieistotna) 
+    do 1.0 (w pełni istotna).
+    
+    \item \textbf{Groundedness} (ugruntowanie) -- czy odpowiedź opiera się 
+    na dostarczonym kontekście, czy zawiera halucynacje? Ocena od 0.0 
+    (znaczące halucynacje) do 1.0 (wszystkie fakty z kontekstu).
+    
+    \item \textbf{Overall} (ocena ogólna) -- całościowa ocena jakości 
+    odpowiedzi uwzględniająca wszystkie aspekty.
+\end{enumerate}
+
+\subsection{Implementacja}
+
+Dla każdego wymiaru model GPT-4o otrzymuje prompt z pytaniem, 
+odpowiedzią referencyjną, wygenerowaną odpowiedzią oraz (dla 
+groundedness) kontekstem. Model zwraca pojedynczą wartość liczbową z zakresu [0.0, 1.0].
+
+\subsection{Zalety i ograniczenia}
+
+LLM-as-a-Judge oferuje kilka zalet w porównaniu do metryk automatycznych:
+\begin{itemize}
+    \item Rozumie parafrazowanie i różne sposoby wyrażenia tej samej informacji
+    \item Ocenia faktyczną poprawność, nie tylko podobieństwo leksykalne
+    \item Może wykryć halucynacje i błędy merytoryczne
+\end{itemize}
+
+Ograniczenia metody obejmują:
+\begin{itemize}
+    \item Wyższy koszt (każda ocena wymaga wywołania API)
+    \item Potencjalna niestabilność ocen (różne wywołania mogą dawać 
+    nieznacznie różne wyniki)
+    \item Możliwe biasy modelu oceniającego
+\end{itemize}
+
+
+\section{Dataset ewaluacyjny}\label{sec:dataset}
+
+\subsection{Dokument źródłowy}
+
+Do ewaluacji wykorzystano dokumentację techniczną routera TP-Link 
+Archer D7 (User Guide, 119 stron). Wybór tego dokumentu podyktowany 
+był kilkoma czynnikami:
+\begin{itemize}
+    \item Reprezentatywność dla dokumentacji technicznej
+    \item Zróżnicowana zawartość (specyfikacje, instrukcje, rozwiązywanie problemów)
+    \item Dostępność publiczna
+    \item Odpowiednia długość do testowania systemu RAG
+\end{itemize}
+
+\subsection{Pytania testowe}
+
+Przygotowano 25 pytań testowych podzielonych na trzy kategorie:
+
+\begin{table}[h]
+\centering
+\caption{Kategorie pytań w datasecie ewaluacyjnym}
+\label{tab:question-categories}
+\begin{tabular}{|l|c|p{7cm}|}
+\hline
+\textbf{Kategoria} & \textbf{Liczba} & \textbf{Charakterystyka} \\
+\hline
+Factual & 8 & Pytania o konkretne fakty (np. domyślny adres IP, 
+dane techniczne) \\
+\hline
+Procedural & 9 & Pytania o procedury i instrukcje (np. jak wykonać 
+reset fabryczny) \\
+\hline
+Troubleshooting & 8 & Pytania o rozwiązywanie problemów (np. co zrobić 
+gdy nie działa WiFi) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Ground truth}
+
+Dla każdego pytania przygotowano:
+\begin{itemize}
+    \item \textbf{Expected answer} -- odpowiedź referencyjna wyekstrahowana 
+    bezpośrednio z dokumentu przez model GPT-4o z instrukcją zachowania 
+    oryginalnego sformułowania
+    \item \textbf{Relevant chunk indices} -- lista indeksów fragmentów 
+    dokumentu zawierających informacje potrzebne do odpowiedzi, 
+    annotowana przez model GPT-4o
+\end{itemize}
+
+Proces przygotowania datasetu był półautomatyczny: model językowy 
+ekstrahował odpowiedzi i annotował istotne fragmenty, a następnie 
+wyniki były weryfikowane pod kątem poprawności.
+
+
+\section{Plan eksperymentów}\label{sec:experiment-plan}
+
+\subsection{Badane parametry}
+
+Przeprowadzono eksperymenty badające wpływ trzech kluczowych 
+parametrów systemu RAG:
+
+\begin{enumerate}
+    \item \textbf{Chunk size} (rozmiar fragmentu) -- liczba znaków 
+    w pojedynczym fragmencie dokumentu. Testowane wartości: 
+    300, 500, 800, 1200, 1500 znaków.
+    
+    \item \textbf{k} (liczba fragmentów) -- ile fragmentów jest 
+    pobieranych z bazy wektorowej i przekazywanych do modelu. 
+    Testowane wartości: 1, 3, 5, 7, 10.
+    
+    \item \textbf{Overlap} (nakładanie) -- liczba znaków wspólnych 
+    między sąsiednimi fragmentami. Testowane wartości: 0, 50, 100, 
+    200, 300 znaków.
+\end{enumerate}
+
+\subsection{Metodyka eksperymentów}
+
+Każdy eksperyment przebiegał według przedstawionego poniżej schematu:
+\begin{enumerate}
+    \item Utworzenie pipeline RAG z zadanymi parametrami
+    \item Przetworzenie dokumentu (chunking, embeddingi, indeksowanie)
+    \item Dla każdego pytania z datasetu:
+    \begin{enumerate}
+        \item Wygenerowanie odpowiedzi przez system
+        \item Obliczenie metryk ROUGE-1 F1 i Semantic Similarity
+        \item Zmierzenie czasu odpowiedzi (latencja)
+    \end{enumerate}
+    \item Agregacja wyników
+\end{enumerate}
+
+
+\subsection{Konfiguracja bazowa}
+
+Wszystkie eksperymenty wykorzystywały następującą konfigurację bazową:
+\begin{itemize}
+    \item Model embeddingów: OpenAI text-embedding-3-large
+    \item Baza wektorowa: FAISS (Facebook AI Similarity Search)
+    \item Model generacji: GPT-4o (temperature=0)
+    \item Metryka podobieństwa: cosine similarity
+\end{itemize}
+
+
+\section{Proces ewaluacji}\label{sec:evaluation-pipeline}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{chapters/evaluation_process_simple.png}
+\caption{Pipeline ewaluacji systemu RAG}
+\label{fig:evaluation-pipeline}
+\end{figure}
+
+\subsection{Przygotowanie datasetu}
+
+Skrypt  przetwarza dokument PDF oraz generuje 
+dataset ewaluacyjny:
+\begin{enumerate}
+    \item Dokument jest dzielony na fragmenty z konfiguracją bazową
+    \item Dla każdego pytania model GPT-4o ekstrahuje odpowiedź z dokumentu
+    \item Model annotuje które fragmenty są istotne dla pytania
+    \item Wyniki zapisywane są w formacie JSON
+\end{enumerate}
+
+\subsection{Ścieżka A: Ewaluacja retrieval}
+
+Skrypt ocenia jakość wyszukiwania 
+\textbf{wyłącznie dla konfiguracji bazowej}. Ograniczenie to wynika 
+z faktu, że annotacje istotnych fragmentów są specyficzne dla konkretnego 
+podziału dokumentu -- zmiana parametrów generuje inny zbiór fragmentów, 
+przez co indeksy stają się nieporównywalne.
+
+\begin{enumerate}
+    \item Dla każdego pytania pobierane są fragmenty z bazy wektorowej
+    \item Porównywane są z annotowanymi fragmentami istotnymi
+    \item Obliczane są metryki: Precision@k, Recall@k, F1@k, MRR, NDCG@k
+    \item Wyniki agregowane są dla różnych wartości k
+\end{enumerate}
+
+\subsection{Ścieżka B: Eksperymenty z parametrami}
+
+Skrypt przeprowadza serie eksperymentów 
+z różnymi konfiguracjami. Ponieważ metryk retrieval nie da się porównać
+między konfiguracjami, eksperymenty wykorzystują \textbf{metryki generacji}, 
+które mierzą końcową jakość odpowiedzi niezależnie od wewnętrznego 
+podziału dokumentu.
+
+\begin{enumerate}
+    \item Dla każdej konfiguracji parametrów tworzony jest nowy pipeline
+    \item System generuje odpowiedzi na wszystkie pytania z datasetu
+    \item Obliczane są metryki: ROUGE-1 F1, Semantic Similarity, latencja
+    \item Wyniki zapisywane są dla porównania konfiguracji
+\end{enumerate}
+
+\subsection{Ścieżka C: Ewaluacja końcowa z LLM Judge}
+
+Skrypt \texttt{evaluate\_generation.py} z flagą \texttt{--llm-judge} 
+przeprowadza szczegółową ewaluację dla optymalnej konfiguracji 
+wyłonionej w eksperymentach.
+
+\begin{enumerate}
+    \item System generuje odpowiedź dla każdego pytania
+    \item Obliczane są metryki automatyczne: ROUGE-1 F1, Semantic Similarity
+    \item Model GPT-4o ocenia odpowiedzi w 5 wymiarach (LLM Judge)
+    \item Obliczany jest wskaźnik Success Rate
+\end{enumerate}

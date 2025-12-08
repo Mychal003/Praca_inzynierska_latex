@@ -1,0 +1,106 @@
+W tej sekcji przedstawiono demonstrację działania systemu na 
+przykładzie dokumentacji routera TP-Link Archer C7.
+
+\subsection{Logowanie do systemu}
+
+Po uruchomieniu aplikacji użytkownik widzi ekran logowania (Rysunek~\ref{fig:demo_login}). Nowi użytkownicy mogą założyć konto przechodząc do zakładki 
+,,Rejestracja''. Po zalogowaniu system przekierowuje do głównego 
+interfejsu aplikacji.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{images/implementation/login_screen.png}
+\caption{Ekran logowania do systemu}
+\label{fig:demo_login}
+\end{figure}
+
+\subsection{Tworzenie konwersacji i przesyłanie dokumentu}
+
+Po zalogowaniu użytkownik widzi panel boczny z listą swoich 
+konwersacji. Aby rozpocząć nową rozmowę, należy kliknąć przycisk 
+,,+'' w panelu bocznym, a następnie przesłać dokument PDF.
+
+Proces przetwarzania dokumentu obejmuje ekstrakcję tekstu, 
+podział na chunki oraz generowanie embeddingów. Czas 
+przetwarzania dla typowej dokumentacji technicznej wynosi kilka sekund.
+
+\newpage
+\subsection{Zadawanie pytań}
+
+Po przetworzeniu dokumentu użytkownik może zadawać pytania 
+w języku naturalnym. System automatycznie klasyfikuje typ 
+pytania i dostosowuje format odpowiedzi:
+
+\begin{itemize}
+    \item \textbf{Pytania faktyczne} -- zwięzła, konkretna informacja
+    \item \textbf{Pytania proceduralne} -- numerowana lista kroków
+    \item \textbf{Pytania o problemy} -- diagnoza i propozycje rozwiązań
+\end{itemize}
+
+Rysunek~\ref{fig:demo_factual} przedstawia przykład odpowiedzi 
+na pytanie faktyczne dotyczące specyfikacji urządzenia.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/implementation/demo_factual.png}
+\caption{Przykład odpowiedzi na pytanie faktyczne}
+\label{fig:demo_factual}
+\end{figure}
+
+\newpage
+Rysunek~\ref{fig:demo_procedural} przedstawia odpowiedź na pytanie 
+proceduralne z instrukcją krok po kroku.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/implementation/demo_procedural.png}
+\caption{Przykład odpowiedzi na pytanie proceduralne}
+\label{fig:demo_procedural}
+\end{figure}
+
+\newpage
+\subsection{Wyświetlanie źródeł}
+
+Każda odpowiedź zawiera rozwijalną sekcję ,,Źródła'' -- fragmenty 
+dokumentu użyte do wygenerowania odpowiedzi. 
+Rysunek~\ref{fig:demo_sources} przedstawia przykład wyświetlonych źródeł.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/implementation/demo_sources1.png}
+\caption{Źródła użyte do wygenerowania odpowiedzi}
+\label{fig:demo_sources}
+\end{figure}
+
+Sekcja źródeł umożliwia użytkownikowi weryfikację poprawności 
+odpowiedzi oraz przeczytanie szerszego kontekstu z oryginalnego 
+dokumentu.
+
+\newpage
+\subsection{Historia konwersacji}
+
+System zapisuje wszystkie konwersacje użytkownika w bazie danych. 
+Panel boczny wyświetla listę poprzednich rozmów. Użytkownik ma możliwość
+przełączania się między nimi. Rysunek~\ref{fig:demo_history} 
+przedstawia interfejs z kilkoma zapisanymi konwersacjami.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/implementation/demo_history.png}
+\caption{Panel boczny z historią konwersacji}
+\label{fig:demo_history}
+\end{figure}
+
+Każda pozycja na liście zawiera tytuł konwersacji (generowany na podstawie nazwy przesłanego dokumentu) oraz liczbę wiadomości. Użytkownik może również usunąć wybraną konwersację klikając przycisk ,,×''.
+
+\subsection{Wznawianie konwersacji}
+
+Ważną funkcjonalnością systemu jest możliwość wznawiania 
+poprzednich rozmów. Po kliknięciu użytkownika na konwersację w panelu 
+bocznym system ładuje zapisaną bazę wektorową z dysku oraz 
+wyświetla pełną historię wiadomości.
+
+Dzięki temu użytkownik może kontynuować pracę z dokumentem 
+bez konieczności ponownego przesyłania pliku PDF i oczekiwania 
+na przetworzenie. Stan konwersacji jest zachowywany po 
+wylogowaniu i ponownym zalogowaniu.

@@ -1,0 +1,102 @@
+% retrieval.tex - Wyniki ewaluacji wyszukiwania
+
+Ewaluacja modułu wyszukiwania została przeprowadzona dla konfiguracji 
+bazowej (chunk\_size=800, chunk\_overlap=100). 
+Moduł wyszukiwania odpowiada za generowanie fragmentów dokumentu 
+najbardziej podobnych semantycznie do pytania użytkownika. Do wyszukiwania 
+wykorzystano embeddingi z modelu \texttt{text-embedding-3-large} oraz 
+indeks wektorowy FAISS.
+
+\subsection{Precision i Recall}
+
+Rysunek~\ref{fig:precision_recall} przedstawia porównanie metryk 
+Precision i Recall dla różnych wartości k (liczby pobieranych fragmentów).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/results/retrieval_precision_recall.png}
+\caption{Porównanie Precision i Recall dla różnych wartości k}
+\label{fig:precision_recall}
+\end{figure}
+
+Wraz ze wzrostem k obserwujemy spadek Precision (pobieramy więcej 
+fragmentów, w tym mniej trafnych) oraz wzrost Recall (znajdujemy więcej 
+trafnych fragmentów). Jest to klasyczny kompromis w systemach 
+wyszukiwania informacji (information retrieval trade-off).
+
+\subsection{Podsumowanie metryk wyszukiwania}
+
+Tabela~\ref{tab:retrieval_results} przedstawia szczegółowe wyniki 
+dla różnych wartości k.
+
+\begin{table}[H]
+\centering
+\caption{Wyniki ewaluacji wyszukiwania}
+\label{tab:retrieval_results}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Metryka} & \textbf{k=1} & \textbf{k=3} & \textbf{k=5} & \textbf{k=10} \\
+\hline
+Precision@k & 0.880 & 0.733 & 0.624 & 0.468 \\
+Recall@k & 0.168 & 0.366 & 0.485 & 0.687 \\
+F1@k & 0.268 & 0.449 & 0.500 & 0.508 \\
+NDCG@k & 0.880 & 0.785 & 0.739 & 0.744 \\
+\hline
+MRR & \multicolumn{4}{c|}{0.920} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Jakość rankingu (NDCG)}
+
+Rysunek~\ref{fig:ndcg} przedstawia jak zmienia się metryka NDCG 
+(Normalized Discounted Cumulative Gain) wraz ze wzrostem k.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/results/retrieval_ndcg.png}
+\caption{Zmiana NDCG w zależności od liczby pobieranych fragmentów}
+\label{fig:ndcg}
+\end{figure}
+
+NDCG mierzy jakość rankingu -- czy trafne fragmenty znajdują się 
+na wysokich pozycjach. Wysoka wartość NDCG@1 = 0.880 oznacza, 
+że pierwszy pobrany fragment jest zwykle trafny. Warto zauważyć, 
+że NDCG nieznacznie rośnie między k=5 (0.739) a k=10 (0.744), 
+co sugeruje, że dodatkowe fragmenty na dalszych pozycjach 
+również zawierają istotne informacje.
+\newpage
+\subsection{Analiza wyników wyszukiwania}
+
+Uzyskane wyniki wskazują na wysoką jakość modułu wyszukiwania:
+
+\begin{itemize}
+    \item \textbf{MRR = 0.920} -- średnia odwrotność pozycji pierwszego 
+    trafnego fragmentu. Wysoka wartość oznacza, że trafny fragment 
+    pojawia się zwykle na pierwszej lub drugiej pozycji rankingu. 
+    Jest to bardzo dobry wynik, który pokazuje skuteczność 
+    wyszukiwania semantycznego.
+    
+    \item \textbf{Precision@5 = 0.624} -- około 3 z 5 pobranych 
+    fragmentów jest trafnych. System skutecznie identyfikuje 
+    istotne fragmenty dokumentu.
+    
+    \item \textbf{Recall@5 = 0.485} -- system znajduje około 
+    połowę wszystkich trafnych fragmentów. Wartość ta wynika z faktu, 
+    że niektóre pytania mają wiele trafnych fragmentów rozproszonych 
+    w różnych częściach dokumentu.
+    
+    \item \textbf{F1@5 = 0.500} -- zbalansowana miara łącząca 
+    Precision i Recall, wskazująca na dobry kompromis między 
+    precyzją a pokryciem.
+    
+    \item \textbf{Precision@1 = 0.880} -- w 88\% przypadków 
+    pierwszy pobrany fragment jest trafny, co jest kluczowe 
+    dla jakości odpowiedzi RAG.
+\end{itemize}
+
+Wysoka wartość MRR oraz Precision@1 są kluczowe dla systemu RAG, 
+ponieważ oznaczają, że najważniejsze informacje trafiają na początek 
+kontekstu przekazywanego do modelu językowego. Dzięki temu model 
+ma dostęp do najbardziej istotnych merytorycznie fragmentów już na początku 
+promptu, co pozytywnie wpływa na jakość generowanych odpowiedzi.

@@ -1,0 +1,130 @@
+% final.tex - Wyniki końcowe systemu
+
+\subsection{Podsumowanie eksperymentów z parametrami}
+
+Rysunek~\ref{fig:best_configs} przedstawia porównanie najlepszych 
+konfiguracji z każdego eksperymentu. Warto zauważyć, że różnice 
+między konfiguracjami są minimalne --- wszystkie osiągają ROUGE-1 
+w zakresie 0.503--0.510 i Semantic Similarity w zakresie 0.761--0.775.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/results/best_configs_comparison.png}
+\caption{Porównanie najlepszych konfiguracji z każdego eksperymentu}
+\label{fig:best_configs}
+\end{figure}
+
+\subsection{Końcowe wyniki systemu}
+
+Na podstawie przeprowadzonych eksperymentów wybrano optymalną konfigurację: 
+chunk\_size=800, k=10, overlap=100, z elastycznym promptem. Wybór ten jest 
+uzasadniony:
+
+\begin{itemize}
+    \item Perfekcyjnym wynikiem Groundedness (1.000) --- wszystkie odpowiedzi 
+    są w pełni ugruntowane w kontekście dokumentu
+    \item Najniższą latencją spośród testowanych konfiguracji (3.20s)
+    \item Wysoką jakością odpowiedzi (LLM Overall = 93.8\%)
+\end{itemize}
+
+Tabela~\ref{tab:final_results} przedstawia końcowe wyniki systemu.
+
+\begin{table}[H]
+\centering
+\caption{Końcowe wyniki systemu RAG (konfiguracja 800/10/100)}
+\label{tab:final_results}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Metryka} & \textbf{Wartość} \\
+\hline
+ROUGE-1 F1 & 0.503 \\
+Semantic Similarity & 0.775 \\
+Latencja & 3.20s \\
+\hline
+LLM Correctness & 0.960 \\
+LLM Completeness & 0.924 \\
+LLM Relevance & 0.928 \\
+LLM Groundedness & 1.000 \\
+LLM Overall & 0.938 \\
+\hline
+Success Rate & 100\% \\
+\hline
+\end{tabular}
+\end{table}
+
+System osiąga wysokie wyniki we wszystkich wymiarach oceny LLM Judge, 
+z ogólną oceną jakości na poziomie 93.8\%. Szczególnie istotny jest 
+perfekcyjny wynik Groundedness (1.000), który potwierdza że system 
+nie generuje halucynacji -- wszystkie odpowiedzi są w pełni oparte 
+na informacjach z dokumentu źródłowego.
+
+\subsection{Wyniki według kategorii pytań}
+
+Tabela~\ref{tab:category_results} przedstawia wyniki w podziale 
+na kategorie pytań dla optymalnej konfiguracji (800/10/100).
+
+\begin{table}[H]
+\centering
+\caption{Wyniki według kategorii pytań (konfiguracja 800/10/100)}
+\label{tab:category_results}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Kategoria} & \textbf{ROUGE-1} & \textbf{Semantic} & \textbf{Liczba pytań} \\
+\hline
+Factual & 0.453 & 0.704 & 9 \\
+Procedural & 0.567 & 0.829 & 13 \\
+Troubleshooting & 0.371 & 0.753 & 3 \\
+\hline
+\textbf{Średnia} & \textbf{0.503} & \textbf{0.775} & \textbf{25} \\
+\hline
+\end{tabular}
+\end{table}
+
+Najlepsze wyniki uzyskano dla pytań proceduralnych (ROUGE-1 = 0.567), 
+co wynika z faktu, że instrukcje krok po kroku są dobrze opisane 
+w dokumentacji technicznej. Warto zauważyć, że konfiguracja z overlap=100 
+osiąga lepsze wyniki dla pytań diagnostycznych (ROUGE-1 = 0.371, 
+Semantic = 0.753) w porównaniu do konfiguracji bez nakładania się 
+fragmentów --- nakładanie pomaga w syntezie informacji z różnych 
+części dokumentu.
+
+\subsection{Podsumowanie wyników}
+
+Przeprowadzone eksperymenty i ewaluacja pozwoliły na sformułowanie 
+następujących wniosków:
+
+\begin{enumerate}
+    \item \textbf{System osiągnął wysoką jakość odpowiedzi} -- 
+    LLM Overall = 93.8\%, system odpowiedział na każde pytanie opierając dopowiedź na dostarczonnym kontekście, wykazując Groundedness = 100\%.
+    
+    \item \textbf{Projektowanie promptów ma kluczowe znaczenie} -- 
+    zmiana promptu z restrykcyjnego na elastyczny dała poprawę 
+    \textbf{+46\%} w metryce LLM Overall (z 64.2\% do 94.0\%) oraz 
+    wzrost Success Rate z 68\% do 100\%. Jest to znacznie większy 
+    wpływ niż optymalizacja parametrów technicznych.
+    
+    \item \textbf{Różnice między konfiguracjami parametrów są minimalne} --- 
+    LLM Overall waha się w zakresie 0.930--0.940 (różnica 1\%) dla 
+    wszystkich testowanych konfiguracji. Model GPT-4o skutecznie 
+    kompensuje różnice w jakości kontekstu.
+    
+    \item \textbf{Overlap eliminuje halucynacje} -- konfiguracja 
+    800/10/100 osiąga perfekcyjny wynik Groundedness (1.000), 
+    co oznacza, że wszystkie odpowiedzi są w pełni oparte na kontekście dostarczonym w dokumencie źródłowym.
+    
+    \item \textbf{Optymalna konfiguracja to 800/10/100} -- łączy 
+    najniższą latencję (3.20s), perfekcyjne Groundedness (1.000) 
+    i wysoką jakość odpowiedzi (LLM Overall = 93.8\%).
+    
+    \item \textbf{Większe fragmenty nie poprawiają jakości} -- 
+    chunk\_size=1200 zwiększa latencję o 46\% bez poprawy LLM Overall.
+    
+    \item \textbf{Pytania proceduralne są najłatwiejsze} dla systemu 
+    (ROUGE-1 = 0.567, Semantic = 0.829), a pytania diagnostyczne 
+    najtrudniejsze, choć overlap=100 poprawia ich wyniki.
+    
+    \item \textbf{Wybór modelu językowego jest kluczowy} -- przy 
+    użyciu zaawansowanego modelu (GPT-4o), precyzyjna optymalizacja 
+    parametrów RAG ma marginalny wpływ na końcową jakość odpowiedzi. 
+    Głównym czynnikiem sukcesu jest odpowiednie projektowanie promptów.
+\end{enumerate}

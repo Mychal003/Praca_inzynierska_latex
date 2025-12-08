@@ -1,0 +1,93 @@
+\chapter{Wprowadzenie}\label{chapter:introduction}
+
+Szybki postęp w dziedzinie  sztucznej inteligencji, a w szczególności w tworzeniu dużych modeli językowych (LLM -- Large Language Models), otworzył nowe możliwości w zakresie przetwarzania i analizy tekstu. Współaczesne modele -- np GPT-4 potrafią generować odpowiedzi
+na pytania użytkowników w sposób przypominający konwersacje z drugim człowiekiem. Jednakże same modele językowe
+mają istotne ograniczenie -- ich wiedza pochodzi wyłącznie z danych treningowych, oznacza to, że 
+ nie mają one dostępu do wewnętrzych dokumentów firmowych czy szcegółowej dokumentacji technicznej. Pomimo, że teoretycznie istnieje możliwość dostosowania modelu do konkretnej
+dziedziny poprzez proces finetuningu, to w praktyce jest to  mało opłcalne. Takie rozwiązanie jest bowiem obarczone wieloma wadami, jest kosztowne,
+czasochłonne oraz wymagające przygotowania dużych zestawów wysokiej jakości danych. Przy tym nie bez znaczenia jest fakt, że nawet niewielkie błędy w gromadzonych danych mogą zaburzyć i wypaczyć działanie modelu. Pondto, po zakończeniu
+finetuningu model staje się „zamknięty” na bieżące aktualizacje -- aby wprowadzić nowe informacje, konieczne jest ponowne przeprowadzenie procesu trenowaniea. Tu rodzi się pytanie o sens stosowania tego podejścia w środowiskach, w któych dokunentacja ulega regularnym zmianą.
+
+To istotne ograniczenie można wyeliminować wykorzystując achitekturę RAG (Retrieval--Augmented Generation) w której proces generowania odpowiedzi jest wspierany mechanizmem wyszukiwania informacji. System odnajduje informacje, które są powiązane z pytaniem użytkownika, a następnie przekazuje je modelowi językowemu jako kontekst. W konsekfencji model może udzielać precyzyjnych odpowiedzi dotyczących dowolnych materiłów źródłowych --  bez potrzeby trenowania czy modyfikowania samego modelu.
+
+
+Niniejsza praca przedstawia projekt, implementację oraz ewaluację systemu RAG 
+przeznaczonego do obsługi dokumentacji technicznej. System został przetestowany 
+na instrukcji obsługi routera TP--Link Archer D7, jednakże jego architektura pozwala 
+na zastosowanie z dowolnymi dokumentami PDF.
+
+Głównym wkładem pracy jest kompleksowa metodologia ewaluacji systemu RAG oraz 
+analiza wpływu różnych parametrów na jakość odpowiedzi. Przeprowadzone eksperymenty 
+wykazały, że odpowiednie projektowanie promptów ma kluczowe 
+znaczenie dla skuteczności systemu -- większe niż optymalizacja parametrów 
+technicznych, takich jak rozmiar fragmentów czy liczba pobieranych dokumentów.
+\newpage
+\section{Sformułowanie problemu}
+
+Dokumentacja nowoczesnych, zaawansowanych produktów, często liczy dziesiątki lub 
+setki stron. Użytkownicy szukający konkretnej informacji muszą przeszukiwać 
+dokumenty ręcznie, co jest czasochłonne. Tradycyjne wyszukiwanie 
+tekstowe (Ctrl+F) wymaga znajomości dokładnych słów kluczowych i nie radzi sobie 
+z pytaniami zadawanymi w języku naturalnym.
+
+\textbf{Problem badawczy:} Jak zbudować system, który automatycznie odpowiada 
+na pytania użytkowników na podstawie dokumentacji technicznej, zachowując 
+wysoką dokładność i nie generując przy tym nieprawdziwych informacji (halucynacji)?
+
+\textbf{Pytania badawcze:}
+\begin{enumerate}
+    \item Jak parametry przetwarzania dokumentu (rozmiar fragmentów, nakładanie się, liczba pobieranych dokumentów) wpływają na jakość odpowiedzi?
+    \item Jaki wpływ na jakość systemu ma projektowanie promptów w porównaniu 
+    z optymalizacją parametrów technicznych?
+    \item Które metryki najlepiej oceniają jakość systemu RAG - metryki automatyczne 
+    (ROUGE, Semantic Similarity) czy ocena przez model językowy (LLM Judge)?
+\end{enumerate}
+
+\textbf{Znaczenie badania:} Systemy RAG znajdują coraz szersze zastosowanie 
+w obsłudze klienta, wewnętrznych systemach firmowych i asystentach AI. 
+zdiagnozowanie i analiza czynników wpływających na ich jakość pozwala budować lepsze 
+rozwiązania i unikać typowych błędów.
+
+\textbf{Ograniczenia badań:}
+\begin{itemize}
+    \item Ewaluacja przeprowadzona na jednym dokumencie (instrukcja routera, 119 stron)
+    \item Dataset ewaluacyjny zawiera 25 pytań z trzech kategorii
+    \item System obsługuje tylko dokumenty w formacie PDF
+\end{itemize}
+
+\section{Cele pracy}
+
+Głównym celem pracy jest zaprojektowanie i zaimplemantowanie systemu RAG, wraz z jego kompleksową ewaluacją służącego do automatycznego odpowiadania na pytania użytkownika na podstawie dostarczonej dokumentacji technicznej.
+
+\textbf{Cele szczegółowe:}
+\begin{enumerate}
+    \item \textbf{Implementacja systemu RAG} --- stworzenie działającego systemu 
+    obejmującego przetwarzanie PDF, tworzenie embeddingów, bazę wektorową FAISS 
+    oraz generowanie odpowiedzi z użyciem modelu GPT-4o.
+    
+    \item \textbf{Opracowanie metodologii ewaluacji} -- stworzenie zestawu narzędzi 
+    do oceny jakości systemu obejmującego:
+    \begin{itemize}
+        \item metryki wyszukiwania (Precision, Recall, MRR, NDCG)
+        \item metryki generacji (ROUGE, Semantic Similarity)
+        \item ocenę przez model językowy (LLM Judge)
+    \end{itemize}
+    
+    \item \textbf{Realizacja eksperymentów} -- analiza wpływu parametrów:
+    \begin{itemize}
+        \item rozmiar fragmentów (chunk size): 300, 500, 800, 1200, 1500 znaków
+        \item liczba pobieranych dokumentów (k): 1, 3, 5, 7, 10
+        \item nakładanie się fragmentów (overlap): 0, 50, 100, 200, 300 znaków
+    \end{itemize}
+    
+    \item \textbf{Optymalizacja systemu} -- znalezienie optymalnej konfiguracji 
+    parametrów oraz zaprojektowanie skutecznych promptów dla różnych typów pytań.
+    
+    \item \textbf{Analiza wyników} -- porównanie wpływu poszczególnych czynników 
+    na jakość systemu i sformułowanie wniosków dla przyszłych implementacji.
+\end{enumerate}
+
+
+
+\section{Thesis Outline}
+Zarysuj strukturę swojej pracy dyplomowej. Ogólnie przedstawienie pracy. Przykładowo: ,,Praca dzieli się na $7$ rozdziałów (\dots)''. Rozdział \ref{chapter:politechnika} dotyczy (\dots). Temat został rozwinięty~w~\ref{chapter:podrozdzial}.

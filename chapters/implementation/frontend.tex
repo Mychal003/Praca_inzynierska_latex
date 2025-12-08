@@ -1,0 +1,192 @@
+Frontend systemu został zaimplementowany jako aplikacja webowa 
+wykorzystująca HTML5, CSS3 oraz JavaScript. Interfejs zaprojektowano 
+z myślą o intuicyjności, czytelności odpowiedzi oraz możliwości 
+zarządzania wieloma konwersacjami.
+
+\subsection{Struktura frontendu}
+
+\dirtree{%
+.1 frontend/.
+.2 index.html.
+.2 static/.
+.3 css/.
+.4 style.css.
+.3 js/.
+.4 auth.js.
+.4 app.js.
+}
+
+Główne pliki aplikacji:
+\begin{itemize}
+    \item \texttt{index.html} -- struktura HTML z ekranami logowania i chatu
+    \item \texttt{auth.js} -- obsługa autoryzacji (JWT, logowanie, rejestracja)
+    \item \texttt{app.js} -- logika chatu i zarządzanie konwersacjami
+    \item \texttt{style.css} -- style CSS z ciemnym motywem
+\end{itemize}
+
+\subsection{Interfejs użytkownika}
+
+Interfejs składa się z trzech głównych ekranów:
+
+\begin{enumerate}
+    \item \textbf{Ekran logowania} -- formularz logowania i rejestracji użytkownika
+    \item \textbf{Sekcja uploadu} -- wybór i przesłanie pliku PDF do przetworzenia
+    \item \textbf{Sekcja chatu} -- historia konwersacji, sidebar z listą rozmów 
+    oraz pole do wpisywania pytań
+\end{enumerate}
+\newpage
+Rysunki~\ref{fig:login_screen} i~\ref{fig:register_screen} przedstawiają ekran logowania oraz rejestracji.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{images/implementation/login_screen.png}
+\caption{Ekran logowania}
+\label{fig:login_screen}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{images/implementation/Rejestr.png}
+\caption{Ekran rejestracji}
+\label{fig:register_screen}
+\end{figure}
+
+
+\newpage
+Po zalogowaniu użytkownik widzi interfejs z bocznym panelem zawierającym 
+listę swoich konwersacji. Rysunek~\ref{fig:upload_screen} przedstawia 
+ekran uploadu dokumentu.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/implementation/upload_screen1.png}
+\caption{Ekran uploadu dokumentu PDF z panelem konwersacji}
+\label{fig:upload_screen}
+\end{figure}
+
+
+Po przesłaniu dokumentu użytkownik przechodzi do interfejsu chatu 
+przedstawionego na rysunku~\ref{fig:chat_screen}. Panel boczny 
+umożliwia przełączanie między konwersacjami oraz tworzenie nowych.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/implementation/chat_screen1.png}
+\caption{Interfejs chatu z historią konwersacji}
+\label{fig:chat_screen}
+\end{figure}
+
+\newpage
+\subsection{System autoryzacji}
+
+Moduł \texttt{auth.js} zarządza tokenami JWT i stanem użytkownika. 
+Listing~\ref{lst:auth_module} przedstawia główne funkcje autoryzacji.
+
+\begin{lstlisting}[language=JavaScript, caption={Moduł autoryzacji}, label={lst:auth_module}]
+const Auth = {
+    getToken() {
+        return localStorage.getItem('auth_token');
+    },
+    
+    setToken(token) {
+        localStorage.setItem('auth_token', token);
+    },
+    
+    getHeaders() {
+        const headers = {'Content-Type': 'application/json'};
+        const token = this.getToken();
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    },
+    
+    async login(username, password) {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username, password})
+        });
+        const data = await response.json();
+        if (response.ok) {
+            this.setToken(data.token);
+        }
+        return data;
+    }
+};
+\end{lstlisting}
+
+\newpage
+\subsection{Zarządzanie konwersacjami}
+
+Aplikacja umożliwia tworzenie, przeglądanie i usuwanie konwersacji. 
+Listing~\ref{lst:conversations} przedstawia funkcje zarządzania rozmowami.
+
+\begin{lstlisting}[language=JavaScript, caption={Zarządzanie konwersacjami}, label={lst:conversations}]
+async function loadConversations() {
+    const response = await apiCall('/conversations');
+    const data = await response.json();
+    renderConversationsList(data.conversations);
+}
+
+async function createNewConversation() {
+    const response = await apiCall('/conversations', {
+        method: 'POST'
+    });
+    const data = await response.json();
+    currentConversationId = data.conversation.id;
+    await loadConversations();
+}
+
+async function openConversation(conversationId) {
+    const response = await apiCall(
+        `/conversations/${conversationId}`
+    );
+    const data = await response.json();
+    currentConversationId = conversationId;
+    renderMessages(data.conversation.messages);
+}
+\end{lstlisting}
+
+\newpage
+\subsection{Komunikacja z API}
+
+Wszystkie żądania do API są realizowane przez funkcję pomocniczą 
+\texttt{apiCall}, która automatycznie dodaje nagłówki autoryzacji. 
+Listing~\ref{lst:ask_question} przedstawia funkcję wysyłania pytania.
+
+\begin{lstlisting}[language=JavaScript, caption={Wysyłanie pytania do API}, label={lst:ask_question}]
+async function askQuestion() {
+    const input = document.getElementById('questionInput');
+    const question = input.value.trim();
+    if (!question) return;
+    
+    addMessageToUI(question, 'user');
+    input.value = '';
+    
+    try {
+        const response = await apiCall(
+            `/conversations/${currentConversationId}/query`, 
+            {
+                method: 'POST',
+                body: JSON.stringify({question})
+            }
+        );
+        const data = await response.json();
+        
+        if (response.ok) {
+            addMessageToUI(data.answer, 'assistant', 
+                          data.category, data.sources);
+        } else {
+            addMessageToUI(`Blad: ${data.error}`, 'error');
+        }
+    } catch (error) {
+        addMessageToUI(`Blad: ${error.message}`, 'error');
+    }
+}
+\end{lstlisting}
+
+Odpowiedzi asystenta zawierają kategorię pytania oraz źródła 
+(fragmenty dokumentu), które można rozwinąć klikając w sekcję 
+,,Źródła'' pod odpowiedzią.
+\newpage

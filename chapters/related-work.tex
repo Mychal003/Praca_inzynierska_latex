@@ -1,0 +1,272 @@
+\chapter{Przegląd literatury}\label{chapter:related}
+
+Rozdział przedstawia przegląd istniejących rozwiązań i technik związanych 
+z tematem pracy. Omówione zostały duże modele językowe, architektura RAG, 
+metody wyszukiwania semantycznego oraz podejścia do ewaluacji systemów 
+odpowiadających na pytania.
+
+\section{Duże modele językowe (LLM)}
+
+Duże modele językowe (Large Language Models - LLM) to sieci neuronowe 
+trenowane na ogromnych zbiorach tekstu, potrafiące generować spójne 
+i sensowne odpowiedzi w języku naturalnym. Przełomem w tej dziedzinie 
+była architektura Transformer zaproponowana przez Vaswani i zespół 
+w 2017 roku~\cite{vaswani2017attention}. W przeciwieństwie do wcześniejszych 
+rozwiązań rekurencyjnych (RNN), transformer opiera się wyłącznie na mechanizmie uwagi (attention), co pozwala na zrównoleglenie obliczeń i lepsze modelowanie 
+zależności w długich sekwencjach.
+
+Oryginalna architektura składała się zarówno z enkodera, jak i dekodera. 
+W toku dalszych badań wyewoluowały jednak dwa główne, wyspecjalizowane nurty:
+
+\begin{itemize}
+    \item \textbf{Modele typu encoder (dwukierunkowe)} -- np. BERT~\cite{devlin2019bert}. 
+    Modele te przetwarzają tekst, uwzględniając kontekst z obu stron jednocześnie 
+    (mechanizm \textit{self-attention}), co czyni je idealnymi do zadań wymagających 
+    głębokiego zrozumienia tekstu, takich jak klasyfikacja czy ekstrakcja odpowiedzi.
+    
+    \item \textbf{Modele typu decoder (autoregresywne)} -- np. GPT~\cite{brown2020language}. 
+    Modele te wykorzystują maskowany mechanizm uwagi, przetwarzając tekst sekwencyjnie 
+    (od lewej do prawej), co jest kluczowe dla zadań generatywnych, gdzie model 
+    przewiduje kolejne słowo na podstawie poprzednich.
+\end{itemize}
+
+
+Modele z rodziny GPT (Generative Pre-trained Transformer) firmy OpenAI 
+stały się standardem w dziedzinie generowania tekstu. GPT-3 z 175 miliardami 
+parametrów~\cite{brown2020language} zademonstrował przełomową zdolność do 
+uczenia się z kontekstu (\textit{in-context learning}), wykonując zadania 
+na podstawie zaledwie kilku przykładów (\textit{few-shot}) lub wyłącznie 
+instrukcji (\textit{zero-shot}) bez konieczności aktualizacji wag sieci.
+
+Jego następca, GPT-4~\cite{openai2023gpt4}, jest modelem multimodalnym, 
+akceptującym zarówno tekst, jak i obrazy na wejściu. Wprowadził on znaczące 
+ulepszenia w zakresie zdolności rozumowania, osiągając wyniki na poziomie 
+ludzkim w wielu profesjonalnych egzaminach akademickich.
+
+Poimo tych osiągnięć, modele LLM posiadają istotne ograniczenia, które dla skuteczności i celowości pożądanych rozwiązań muszą być wyeliminowane. Architektura RAG staje się tym samym kluczowym narzedziem do korygowania i przezwyciężania istotnych ograniczeń modeli LLM.
+\begin{itemize}
+    \item \textbf{Nieaktualna wiedza (\textit{knowledge cutoff})} -- wiedza modeli 
+    jest zamrożona w momencie zakończenia treningu (np. wrzesień 2021 dla 
+    podstawowej wersji GPT-4)~\cite{openai2023gpt4}, przez co nie znają one 
+    bieżących wydarzeń.
+    \item \textbf{Halucynacje} -- modele mają tendencję do generowania 
+    przekonujących, ale faktycznie nieprawdziwych informacji, zwłaszcza 
+    w domenach zamkniętych, gdzie brakuje im dostępu do specyficznych 
+    danych źródłowych~\cite{ji2023hallucination}.
+    \item \textbf{Ograniczone okno kontekstowe} -- mimo powiększania okna 
+    kontekstowego, modele nie są w stanie przetworzyć całej bazy wiedzy 
+    organizacji w jednym zapytaniu.
+\end{itemize}
+
+\section{Retrieval--Augmented Generation (RAG)}
+
+Architektura RAG (Retrieval-Augmented Generation) została formalnie zaproponowana 
+przez Lewisa i zespół w 2020 roku~\cite{lewis2020retrieval}. Autorzy zdefiniowali 
+ją jako paradygmat łączący dwa rodzaje pamięci:
+\begin{itemize}
+    \item \textbf{Pamięć parametryczna (Parametric Memory)} – zawarta w wagach 
+    pre-trenowanego modelu generatywnego (np. BART lub T5), zdobyta podczas 
+    kosztownego procesu uczenia~\cite{lewis2020retrieval}.
+    \item \textbf{Pamięć nieparametryczna (Non-Parametric Memory)} – zewnętrzny, 
+    gęsty indeks wektorowy (np. Wikipedia), do którego model ma dostęp poprzez 
+    mechanizm wyszukiwania (retriever)~\cite{lewis2020retrieval}.
+\end{itemize}
+
+W klasycznym ujęciu proces ten polega na traktowaniu wyszukanych dokumentów 
+jako zmiennej ukrytej (latent variable), na której warunkowana jest generacja 
+odpowiedzi~\cite{lewis2020retrieval}. Podejście to oferuje kluczowe przewagi 
+nad klasycznymi modelami LLM:
+\begin{itemize}
+    \item \textbf{Aktualność wiedzy} – możliwość aktualizacji wiedzy modelu poprzez 
+    prostą wymianę indeksu dokumentów, bez konieczności ponownego trenowania sieci 
+    (hot-swapping)~\cite{lewis2020retrieval}.
+    \item \textbf{Weryfikowalność i interpretowalność} – odpowiedzi są ugruntowane 
+    w konkretnych fragmentach tekstu, co pozwala na weryfikację faktów i zmniejsza 
+    ryzyko halucynacji~\cite{lewis2020retrieval, gao2023retrieval}.
+    \item \textbf{Precyzja w zadaniach intensywnych wiedzą} – RAG osiąga lepsze 
+    wyniki w zadaniach wymagających dostępu do szczegółowych faktów (knowledge-intensive tasks) 
+    niż znacznie większe modele parametryczne~\cite{lewis2020retrieval}.
+\end{itemize}
+
+Wraz z rozwojem technologii, architektura ta ewoluowała. Gao i zespół~\cite{gao2023retrieval} 
+w swoim przeglądzie z 2023 roku klasyfikują systemy RAG na trzy generacje:
+
+\subsection{Naive RAG}
+Jest to najwcześniejsza i najprostsza forma, podążająca za schematem 
+\textit{"Retrieve-Read"}. Proces składa się z indeksowania danych, wyszukiwania 
+najbardziej podobnych fragmentów (top-k) i generowania odpowiedzi przez 
+zamrożony model LLM~\cite{gao2023retrieval}. Główne ograniczenia tego podejścia 
+to niska precyzja wyszukiwania (missed information) oraz ryzyko, że model 
+będzie generował odpowiedzi niespójne z odnalezionym kontekstem~\cite{gao2023retrieval}.
+
+\subsection{Advanced RAG}
+Wprowadzono go w celu przezwyciężenia ograniczeń wersji naiwnej. Kluczową zmianą 
+jest dodanie procesów optymalizacji przed i po wyszukiwaniu (pre-retrieval 
+i post-retrieval)~\cite{gao2023retrieval}. Obejmuje to m.in.:
+\begin{itemize}
+    \item \textbf{Optymalizację zapytań} – np. przepisywanie zapytań (query rewriting) 
+    lub ich rozszerzanie, aby lepiej pasowały do dokumentów w bazie.
+    \item \textbf{Reranking} – ponowne uszeregowanie wyszukanych dokumentów, aby 
+    najbardziej relewantne znalazły się na początku kontekstu, co jest kluczowe 
+    ze względu na problem "lost in the middle" w modelach językowych~\cite{gao2023retrieval}.
+\end{itemize}
+
+\subsection{Modular RAG}
+Najnowszy paradygmat, który odchodzi od sztywnej sekwencji retriever-generator 
+na rzecz elastycznej architektury modułowej. Wprowadza nowe moduły, takie jak 
+moduł wyszukiwania (Search), pamięci (Memory) czy fuzji (Fusion)~\cite{gao2023retrieval}. 
+Umożliwia to stosowanie zaawansowanych wzorców, takich jak iteracyjne wyszukiwanie 
+(Iterative Retrieval) czy dynamiczne decydowanie o tym, kiedy w ogóle skorzystać 
+z wyszukiwania (Adaptive Retrieval)~\cite{gao2023retrieval}.
+
+\section{Embeddingi i wyszukiwanie semantyczne}
+
+Fundamentem skuteczności systemów RAG jest mechanizm wyszukiwania semantycznego 
+(Semantic Search). W przeciwieństwie do tradycyjnych metod opartych na słowach 
+kluczowych (tzw. \textit{Sparse Retrieval}, np. algorytm BM25), wyszukiwanie 
+semantyczne operuje na znaczeniu tekstu, na treści rozumianej jako ogół bez skupiania się na poszczeglnych wyrazach. Pozwala to na znalezienie dokumentów, 
+które odpowiadają intencji zapytania, nawet jeśli nie zawierają tych samych 
+słów (rozwiązanie problemu luki leksykalnej).
+
+Kluczowym pojęciem są tutaj \textbf{embeddingi} (reprezentacje wektorowe) -- 
+gęste wektory liczb rzeczywistych, które mapują tekst do n-wymiarowej przestrzeni 
+w taki sposób, aby teksty o podobnym znaczeniu znajdowały się blisko siebie. 
+Ewolucję modeli tworzących te reprezentacje można podzielić na trzy etapy:
+
+\begin{enumerate}
+    \item \textbf{Embeddingi statyczne} -- Prekursorskie metody takie jak 
+    Word2Vec~\cite{mikolov2013word2vec} czy GloVe~\cite{pennington2014glove}. 
+    Generowały one jeden, stały wektor dla każdego słowa w słowniku, niezależnie 
+    od kontekstu (np. słowo "zamek" miało taką samą reprezentację w kontekście 
+    budowli i błyskawicznego).
+    
+    \item \textbf{Embeddingi kontekstowe (BERT)} – Model BERT~\cite{devlin2019bert} 
+    wprowadził reprezentacje zależne od kontekstu. Jednakże, jak wykazali 
+    Reimers i Gurevych~\cite{reimers2019sentencebert}, standardowy BERT jest 
+    nieefektywny w zadaniu wyszukiwania podobieństwa semantycznego (Semantic 
+    Textual Similarity), często ustępując prostszym metodom jak GloVe. 
+    
+    \item \textbf{Modele Bi-Encoder (Sentence-BERT)} – Przełomem było wprowadzenie 
+    architektury syjamskiej (Siamese BERT Networks) w modelu 
+    Sentence-BERT~\cite{reimers2019sentencebert}. Pozwoliło to na generowanie 
+    wysokiej jakości wektorów dla całych zdań lub akapitów, które można 
+    efektywnie porównywać za pomocą miary podobieństwa cosinusowego. To podejście 
+    (Dense Retrieval) stało się standardem w systemach RAG~\cite{lewis2020retrieval}.
+\end{enumerate}
+
+Współczesne systemy wykorzystują także komercyjne modele (np. OpenAI text-embedding) 
+lub modele open-source z rankingu MTEB (Massive Text Embedding Benchmark). 
+Do przechowywania i przeszukiwania milionów wektorów wykorzystuje się wyspecjalizowane 
+bazy wektorowe. Pionierskim rozwiązaniem w tej dziedzinie jest biblioteka 
+FAISS (Facebook AI Similarity Search)~\cite{johnson2019faiss}, która implementuje 
+efektywne algorytmy wyszukiwania przybliżonego najbliższego sąsiada (ANN), 
+umożliwiając skalowanie systemów RAG do ogromnych zbiorów danych.
+
+\section{Przetwarzanie dokumentów i chunking}
+
+Przed utworzeniem embeddingów dokumenty muszą zostać podzielone na 
+mniejsze fragmenty (chunki). Jest to konieczne, ponieważ:
+\begin{itemize}
+    \item Modele embeddingów mają ograniczoną długość wejścia
+    \item Mniejsze fragmenty pozwalają na precyzyjniejsze wyszukiwanie
+    \item \textbf{Długość kontekstu LLM} -- mimo rosnących okien kontekstowych, 
+    przekazywanie zbędnych treści zwiększa koszty i może prowadzić do problemu 
+    "zagubienia w środku" (\textit{lost-in-the-middle}). Badania wykazują, że modele 
+    językowe mają trudność z wykorzystaniem informacji znajdujących się w środkowej 
+    części długiego kontekstu wejściowego, preferując informacje z początku lub końca~\cite{liu2023lost}.
+\end{itemize}
+
+Strategie podziału dokumentów obejmują:
+\begin{itemize}
+    \item \textbf{Podział stały} -- fragmenty o stałej liczbie znaków lub słów
+    \item \textbf{Podział rekursywny} -- próba podziału na granicach akapitów, 
+    zdań lub słów
+    \item \textbf{Podział semantyczny} -- grupowanie zdań o podobnym znaczeniu
+    \item \textbf{Podział strukturalny} -- wykorzystanie struktury dokumentu 
+    (nagłówki, sekcje)
+\end{itemize}
+
+Ważnym parametrem jest nakładanie się fragmentów (overlap), które zapobiega 
+utracie kontekstu na granicach chunków. Jednak zbyt duży overlap prowadzi 
+do redundancji i zwiększa koszty przetwarzania.
+
+\section{Ewaluacja systemów RAG}
+
+Ewaluacja systemów RAG jest złożona, ponieważ dla swojej skuteczności wymaga oceny zarówno 
+jakości wyszukiwania, jak i jakości generowanej odpowiedzi.
+
+\subsection{Metryki wyszukiwania}
+
+Standardowe metryki Information Retrieval~\cite{manning2008ir} stosowane 
+do oceny modułu retrieval obejmują:
+\begin{itemize}
+    \item \textbf{Precision@k} -- procent trafnych dokumentów wśród k pobranych
+    \item \textbf{Recall@k} -- procent znalezionych trafnych dokumentów
+    \item \textbf{MRR (Mean Reciprocal Rank)} -- odwrotność pozycji pierwszego 
+    trafnego dokumentu
+    \item \textbf{NDCG (Normalized Discounted Cumulative Gain)} -- miara 
+    uwzględniająca pozycję trafnych dokumentów w rankingu
+\end{itemize}
+
+\subsection{Metryki generacji tekstu}
+
+Do oceny jakości generowanego tekstu stosuje się metryki automatyczne:
+\begin{itemize}
+    \item \textbf{ROUGE}~\cite{lin2004rouge} -- mierzy pokrycie słów między 
+    wygenerowaną odpowiedzią a odpowiedzią referencyjną
+    \item \textbf{BLEU}~\cite{papineni2002bleu} -- mierzy podobieństwo n-gramów, 
+    pierwotnie zaprojektowana do tłumaczenia maszynowego
+    \item \textbf{Semantic Similarity} -- podobieństwo wektorów embeddingów 
+    odpowiedzi wygenerowanej i referencyjnej
+\end{itemize}
+
+Praktyka pokazała, że klasyczne metryki słabo korelują z ludzką oceną w zadaniach otwartych, 
+w systemach RAG coraz częściej stosuje się podejście \textbf{LLM-as-a-Judge}~\cite{zheng2023judging}. 
+Polega ono na wykorzystaniu silnego modelu językowego (np. GPT-4) do oceny jakości 
+odpowiedzi według zdefiniowanych kryteriów, takich jak:
+\begin{itemize}
+    \item \textbf{Groundedness (Faithfulness)} -- czy odpowiedź wynika bezpośrednio z pobranych dokumentów?
+    \item \textbf{Answer Relevance} -- czy odpowiedź jest na temat i realizuje intencję zapytania?
+    \item \textbf{Context Relevance} -- czy pobrane dokumenty zawierały informacje niezbędne do odpowiedzi?
+\end{itemize}
+
+Badania wykazują, że oceny sędziów LLM osiągają ponad 80\% zgodności z ocenami ludzkimi~\cite{zheng2023judging}. 
+Należy jednak uwzględnić ich ograniczenia, takie jak \textit{position bias} (preferowanie odpowiedzi 
+pojawiającej się jako pierwsza) czy \textit{verbosity bias} (faworyzowanie odpowiedzi dłuższych, 
+nawet jeśli są mniej precyzyjne)~\cite{zheng2023judging}.
+
+\section{Prompt Engineering}
+
+Prompt engineering to dziedzina zajmująca się projektowaniem instrukcji
+dla modeli językowych w celu uzyskania pożądanych odpowiedzi.
+Wei i zespół~\cite{wei2022chain} pokazali, że technika Chain-of-Thought
+(łańcuch myślenia) znacząco poprawia zdolności rozumowania modeli
+w zadaniach arytmetycznych, zdroworozsądkowych i symbolicznych.
+
+W kontekście systemów RAG prompt engineering obejmuje:
+\begin{itemize}
+    \item Instrukcje dotyczące wykorzystania kontekstu
+    \item Wskazówki dotyczące formatu odpowiedzi
+    \item Obsługę przypadków, gdy kontekst nie zawiera odpowiedzi
+\end{itemize}
+
+\section{Prompt Patterns}
+
+White i zespół~\cite{white2023prompt} przedstawili systematyczny katalog
+wzorców promptów, traktując inżynierię promptów analogicznie do \textbf{wzorców
+projektowych w inżynierii oprogramowania}. Wykazali, że odpowiednie sformułowanie
+instrukcji i ustrukturyzowanie interakcji może znacząco wpłynąć na jakość
+odpowiedzi i umożliwić rozwiązywanie złożonych problemów bez konieczności
+zmiany parametrów (wag) modelu.
+
+\section{Podsumowanie przeglądu literatury}
+
+W świetle dotychczasowych publikacji system  RAG jawi się jako  aktywny i perspektywiczny obszar badań, który dzięki swojej dynamice
+łączy klasyczne wyszukiwanie informacji z generatywną sztuczną 
+inteligencją. Kluczowe wyzwania w tym obszarze obejmują optymalizację parametrów 
+przetwarzania dokumentów (chunking), dobór odpowiednich, semantycznych metryk 
+ewaluacji oraz projektowanie skutecznych promptów sterujących zachowaniem modelu.
+
+Niniejsza praca wnosi wkład w ten obszar poprzez opracowanie kompleksowej 
+metodologii ewaluacji systemu RAG oraz przeprowadzenie empirycznej analizy 
+wpływu poszczególnych komponentów na końcową jakość odpowiedzi.

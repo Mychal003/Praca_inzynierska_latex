@@ -1,0 +1,203 @@
+Przeprowadzono trzy serie eksperymentów badające wpływ parametrów 
+chunk\_size, \newline k oraz overlap na jakość generowanych odpowiedzi.
+% kursyta, słowa klucz
+\subsection{Wpływ rozmiaru fragmentów (chunk\_size)}
+
+Rysunek~\ref{fig:chunk_size_quality} przedstawia wpływ rozmiaru 
+fragmentów na metryki jakości (ROUGE-1 i Semantic Similarity).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/results/chunk_size_quality.png}
+\caption{Wpływ rozmiaru fragmentów na metryki jakości}
+\label{fig:chunk_size_quality}
+\end{figure}
+\newpage
+Rysunek~\ref{fig:chunk_size_cost} przedstawia wpływ rozmiaru 
+fragmentów na koszty przetwarzania -- latencję oraz liczbę chunków.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/results/chunk_size_cost.png}
+\caption{Wpływ rozmiaru fragmentów na koszty przetwarzania}
+\label{fig:chunk_size_cost}
+\end{figure}
+
+Tabela~\ref{tab:chunk_size_results} przedstawia szczegółowe wyniki 
+dla różnych rozmiarów fragmentów.
+
+\begin{table}[H]
+\centering
+\caption{Wpływ rozmiaru fragmentów na jakość odpowiedzi}
+\label{tab:chunk_size_results}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Konfiguracja} & \textbf{ROUGE-1} & \textbf{Semantic} & \textbf{Latencja (s)} & \textbf{Chunków} \\
+\hline
+Tiny (300) & 0.435 & 0.732 & 2.80 & 497 \\
+Small (500) & 0.459 & 0.744 & 2.62 & 317 \\
+\textbf{Medium (800)} & \textbf{0.505} & 0.767 & 2.85 & 181 \\
+Large (1200) & 0.501 & \textbf{0.777} & 2.76 & 120 \\
+XLarge (1500) & 0.458 & 0.769 & 3.76 & 98 \\
+\hline
+\end{tabular}
+\end{table}
+
+Najlepsze wyniki uzyskano dla chunk\_size=800 znaków (ROUGE-1 = 0.505). 
+Zbyt małe fragmenty (300 znaków) nie zawierają wystarczającego kontekstu, 
+natomiast zbyt duże fragmenty (1500 znaków) wprowadzają szum informacyjny 
+i zwiększają latencję. Rysunek~\ref{fig:chunk_size_analysis} przedstawia 
+szczegółową analizę z "kompromisu" między jakością a czasem przetwarzania.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{images/results/chunk_size_analysis.png}
+\caption{Szczegółowa analiza wpływu rozmiaru fragmentów}
+\label{fig:chunk_size_analysis}
+\end{figure}
+
+\subsection{Wpływ liczby pobieranych fragmentów (k)}
+
+Rysunek~\ref{fig:k_quality} przedstawia wpływ parametru k na metryki jakości.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/results/k_values_quality.png}
+\caption{Wpływ liczby pobieranych fragmentów na metryki jakości}
+\label{fig:k_quality}
+\end{figure}
+\newpage
+Rysunek~\ref{fig:k_cost} przedstawia wpływ parametru k na latencję systemu.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/results/k_values_cost.png}
+\caption{Wpływ liczby pobieranych fragmentów na latencję}
+\label{fig:k_cost}
+\end{figure}
+
+\begin{table}[H]
+\centering
+
+\caption{Wpływ liczby pobieranych fragmentów na jakość odpowiedzi}
+\label{tab:k_results}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Konfiguracja} & \textbf{ROUGE-1} & \textbf{Semantic} & \textbf{Latencja (s)} \\
+\hline
+k=1 & 0.412 & 0.703 & 2.55 \\
+k=3 & 0.492 & 0.761 & 2.54 \\
+k=5 & 0.500 & 0.767 & 2.61 \\
+k=7 & 0.504 & 0.761 & 2.65 \\
+\textbf{k=10} & \textbf{0.510} & \textbf{0.775} & 2.72 \\
+\hline
+\end{tabular}
+\end{table}
+
+Wyniki pokazują wzrost jakości wraz ze wzrostem k. 
+Najlepsze wyniki uzyskano dla k=10 (ROUGE-1 = 0.510). Warto jednak zauważyć, że przyrost jakości maleje -- różnica między k=1 a k=3 wynosi +0.080, 
+podczas gdy różnica między k=7 a k=10 wynosi tylko +0.006.
+\newpage
+Rysunek~\ref{fig:k_analysis} przedstawia szczegółową analizę wpływu liczby pobieranych dokumentów na jakość RAG
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{images/results/k_analysis.png}
+\caption{Szczegółowa analiza wpływu liczby pobieranych fragmentów}
+\label{fig:k_analysis}
+\end{figure}
+
+\subsection{Wpływ nakładania się fragmentów (overlap)}
+
+Rysunek~\ref{fig:overlap_quality} przedstawia wpływ parametru overlap 
+na metryki jakości.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/results/overlap_quality.png}
+\caption{Wpływ nakładania się fragmentów na metryki jakości}
+\label{fig:overlap_quality}
+\end{figure}
+
+\newpage
+
+Rysunek~\ref{fig:overlap_cost} przedstawia wpływ parametru overlap 
+na koszty przetwarzania.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/results/overlap_cost.png}
+\caption{Wpływ nakładania się fragmentów na koszty przetwarzania}
+\label{fig:overlap_cost}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Wpływ nakładania się fragmentów na jakość odpowiedzi}
+\label{tab:overlap_results}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Konfiguracja} & \textbf{ROUGE-1} & \textbf{Semantic} & \textbf{Latencja (s)} & \textbf{Chunków} \\
+\hline
+\textbf{No overlap (0)} & \textbf{0.503} & 0.761 & 2.80 & 165 \\
+Small (50) & 0.441 & 0.746 & 2.67 & 168 \\
+Medium (100) & 0.485 & 0.762 & 2.60 & 181 \\
+Large (200) & 0.494 & \textbf{0.776} & 2.78 & 211 \\
+XLarge (300) & 0.476 & 0.770 & 2.91 & 252 \\
+\hline
+\end{tabular}
+\end{table}
+
+
+Wyniki dla parametru overlap nie pokazują jednoznacznego trendu. 
+Metryka ROUGE-1 osiąga najwyższą wartość dla overlap=0 (0.503), 
+natomiast Semantic Similarity dla overlap=200 (0.776). Różnice 
+między konfiguracjami są jednak minimalne - Semantic Similarity 
+waha się w zakresie 0.746--0.776, co stanowi różnicę zaledwie 
+3\% i mieści się w granicach wariancji między uruchomieniami.
+\newpage
+Rysunek~\ref{fig:overlap_analysis} przedstawia szczegółową analizę 
+wpływu overlap między chunkami na jakość RAG.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{images/results/overlap_analysis.png}
+\caption{Szczegółowa analiza wpływu nakładania się fragmentów}
+\label{fig:overlap_analysis}
+\end{figure}
+
+TO NIŻEJ TO WSTPNY WNIOSEK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Wybrano \textbf{overlap=0} jako optymalną wartość ze względu na:
+
+\begin{itemize}
+    \item Najwyższy wynik ROUGE-1 (0.503)
+    \item Mniejszą liczbę fragmentów w indeksie (165 vs 211 dla overlap=200)
+    \item Brak redundancji w kontekście przekazywanym do modelu
+    \item Charakterystykę dokumentu technicznego, który ma wyraźne 
+    podziały na sekcje --\ nakładanie się fragmentów nie przynosi 
+    korzyści gdy granice sekcji są naturalne
+\end{itemize}
+
+\newpage
+
+
+
+\subsection{Trade-off jakość vs wydajność}
+
+Rysunek~\ref{fig:quality_latency} przedstawia zależność między 
+jakością odpowiedzi a czasem przetwarzania dla wszystkich 
+testowanych konfiguracji.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/results/quality_vs_latency.png}
+\caption{Kompromis między jakością a czasem odpowiedzi}
+\label{fig:quality_latency}
+\end{figure}
+
+Analiza wykresu pokazuje, że optymalne konfiguracje znajdują się 
+w lewym górnym rogu -- wysoka jakość przy niskiej latencji. 
+Konfiguracje z chunk\_size=800 oferują najlepszy balans między 
+jakością a wydajnością.
+
+\newpage

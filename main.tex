@@ -1,18 +1,21 @@
-
-
-TEX encoding = UTF-8 Unicode
+% TEX encoding = UTF-8 Unicode
 % !TeX TXS-program:compile = txs:///pdflatex/[--shell-escape] 
 \documentclass[12pt, twoside]{book}
 \input{latex-settings.tex}
-\frontmatter
+
+% \frontmatter  <-- USUNIĘTE STĄD
+
 %check the current front page here:
 %https://wiz.pwr.edu.pl/en/students/thesis
 %and generate pdfs, and save in title_page folder.
+
 \begin{document}
+\frontmatter % <-- PRZENIESIONE TUTAJ
+
 \includepdf[pages={1}]{title_page/pd_mgr_pl.pdf}
 \doublepage
-\includepdf[pages={1}]{title_page/pd_mgr_en.pdf}	
-\doublepage
+
+
 % Add table of contents
 \pagestyle{tableOfContentStyle}
 % Add abstract
@@ -21,6 +24,7 @@ TEX encoding = UTF-8 Unicode
 \doublepage
 \tableofcontents 
 \doublepage
+
 % Set page style 
 \pagestyle{custom}
 \mainmatter
@@ -41,6 +45,7 @@ TEX encoding = UTF-8 Unicode
 \pagestyle{bibliographyStyle}
 \bibliographystyle{abbrv}
 \bibliography{bibliography}
+
 % Add list of figures and tables
 \pagestyle{custom}
 \newpage
@@ -48,5 +53,6 @@ TEX encoding = UTF-8 Unicode
 \listoffigures
 \newpage
 \pagestyle{ListofTablesStyle}
-\listotables
+\listoftables % <-- POPRAWIONA LITERÓWKA (było \listotables)
+
 \end{document}

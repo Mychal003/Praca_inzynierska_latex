@@ -1,14 +1,9 @@
 \section*{Streszczenie}
 
-Przedstawiona praca inżynierska zawiera projekt i wdrożenie RAG (Retrieval-Augmented Generation)
-do generowania automatycznych odpowiedzi. Odpowiadając na pytania użytkowników, system na podstawie dokumentacji technicznej łączy wyszukiwanie informacji z generowaniem odpowiedzi przy użyciu dużych modeli
-językowych (LLM).
+Przedstawiona praca inżynierska zawiera projekt i wdrożenie systemu RAG (Retrieval-Augmented Generation) do generowania automatycznych odpowiedzi. Odpowiadając na pytania użytkowników, system na podstawie dokumentacji technicznej łączy wyszukiwanie informacji z generowaniem odpowiedzi przy użyciu dużych modeli językowych (LLM).
 
-Opracowane rozwiązanie przetwarza pliki w formacie PDF, dzieli je na fragmenty (chunki), tworzy reprezentacje wektorowe (embeddingi) i zapisuje je w bazie FAISS.
-Po otrzymaniu zapytania użytkownika system wyszukuje najbardziej pasujące fragmenty dokumentu, a następnie generuje odpowiedź za pomocą modelu GPT-4o.
+Opracowane rozwiązanie przetwarza pliki w formacie PDF, dzieli je na fragmenty (chunki), tworzy reprezentacje wektorowe (embeddingi) i zapisuje je w bazie FAISS. Po otrzymaniu zapytania użytkownika system wyszukuje najbardziej pasujące fragmenty dokumentu, \\a następnie generuje odpowiedź za pomocą modelu GPT-4o.
 
-W ramach przedstawionej pracy inżynierskiej przeprowadzono ewaluację systemu, wykorzystując metryki wyszukiwania (Precision, Recall, MRR, NDCG) oraz metryki generacji (ROUGE,
-Semantic Similarity, LLM Judge). %Przeanalizowano wpływ parametrów, takich jak rozmiar fragmentów, liczba pobieranych dokumentów i nakładanie się fragmentów.
+W ramach przedstawionej pracy inżynierskiej przeprowadzono ewaluację systemu, wykorzystując metryki wyszukiwania (Precision, Recall, MRR, NDCG) oraz metryki generacji (ROUGE, Semantic Similarity, LLM Judge).
 
-Najważniejszą konkluzją wynikającą z obserwacji zaprojektowanego systemu jest to, że sam proces projektowania promptów ma większy wpływ na jakość systemu niż optymalizacja parametrów technicznych, która również pełni istotną rolę w systemie.
-Zoptymalizowany system osiągnął 94.4\% ogólnej jakości według oceny LLM Judge, przy zachowaniu 100\% skuteczności w udzielaniu odpowiedzi.
+Najważniejsza konkluzja przeprowadzonej ewaluacji pozwala przypuszczać, że odpowiednie projektowanie promptów (prompt engineering) odegrało kluczową rolę w eliminacji błędów \\i zapewnieniu poprawności merytorycznej odpowiedzi. Zoptymalizowany system osiągnął 93.8\% ogólnej jakości według oceny LLM Judge, przy zachowaniu 100\% skuteczności \\w udzielaniu odpowiedzi.

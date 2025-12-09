@@ -3,10 +3,6 @@ przykładzie dokumentacji routera TP-Link Archer C7.
 
 \subsection{Logowanie do systemu}
 
-Po uruchomieniu aplikacji użytkownik widzi ekran logowania (Rysunek~\ref{fig:demo_login}). Nowi użytkownicy mogą założyć konto przechodząc do zakładki 
-,,Rejestracja''. Po zalogowaniu system przekierowuje do głównego 
-interfejsu aplikacji.
-
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{images/implementation/login_screen.png}
@@ -16,15 +12,27 @@ interfejsu aplikacji.
 
 \subsection{Tworzenie konwersacji i przesyłanie dokumentu}
 
-Po zalogowaniu użytkownik widzi panel boczny z listą swoich 
-konwersacji. Aby rozpocząć nową rozmowę, należy kliknąć przycisk 
-,,+'' w panelu bocznym, a następnie przesłać dokument PDF.
-
-Proces przetwarzania dokumentu obejmuje ekstrakcję tekstu, 
-podział na chunki oraz generowanie embeddingów. Czas 
-przetwarzania dla typowej dokumentacji technicznej wynosi kilka sekund.
+Po uruchomieniu aplikacji użytkownik widzi ekran logowania (Rysunek~\ref{fig:demo_login}). Nowi użytkownicy mogą założyć konto przechodząc do zakładki 
+,,Rejestracja''. Po zalogowaniu system przekierowuje do głównego 
+interfejsu aplikacji.
 
 \newpage
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/implementation/po_zalgowaniu.png}
+\caption{Interfejs chatu z historią konwersacji}
+\label{fig:chat_screen}
+\end{figure}
+
+Po zalogowaniu użytkownik widzi panel boczny z listą swoich 
+konwersacji~\ref{fig:chat_screen}. Aby rozpocząć nową rozmowę, należy kliknąć przycisk ,,+'' w panelu bocznym, a następnie przesłać dokument PDF.
+
+Proces przetwarzania dokumentu obejmuje ekstrakcję tekstu, 
+podział na chunki i generowanie embeddingów. Czas 
+przetwarzania dla typowej dokumentacji technicznej wynosi \\do kilku sekund.
+
+
 \subsection{Zadawanie pytań}
 
 Po przetworzeniu dokumentu użytkownik może zadawać pytania 
@@ -34,36 +42,43 @@ pytania i dostosowuje format odpowiedzi:
 \begin{itemize}
     \item \textbf{Pytania faktyczne} -- zwięzła, konkretna informacja
     \item \textbf{Pytania proceduralne} -- numerowana lista kroków
-    \item \textbf{Pytania o problemy} -- diagnoza i propozycje rozwiązań
+    \item \textbf{Pytania diagnostyczne} -- diagnoza i propozycje rozwiązań
+\end{itemize}
+\newpage
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/implementation/demo_factual.png}
+    \caption{Przykład odpowiedzi na pytanie faktyczne}
+    \label{fig:demo_factual}
+\end{figure}
+
+Rysunek~\ref{fig:demo_factual} przedstawia przykład odpowiedzi
+na pytanie faktyczne dotyczące specyfikacji urządzenia. Treść pytania i wygenerowanej odpowiedzi to:
+\begin{itemize}
+    \item \bfseries Pytanie (PL): \normalfont Jaka jest pełna nazwa modelu i typ tego routera?
+    \item \bfseries Odpowiedź (PL): \normalfont Pełna nazwa modelu i typ tego routera to TP-LINK Archer D7 AC1750 Wireless Dual Band Gigabit ADSL2+ Modem Router.
+\end{itemize}
+\newpage
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/implementation/demo_procedural.png}
+    \caption{Przykład odpowiedzi na pytanie proceduralne}
+    \label{fig:demo_procedural}
+\end{figure}
+
+Rysunek~\ref{fig:demo_procedural} przedstawia odpowiedź na pytanie
+proceduralne z instrukcją krok po kroku. Treść pytania i wygenerowanej odpowiedzi to:
+\begin{itemize}
+    \item \bfseries Pytanie: \normalfont Jak włączyć filtrowanie MAC w celu kontrolowania dostępu bezprzewodowego?
+    \item \bfseries Odpowiedź: \normalfont 1. Odwiedź http://tplinkmodem.net i zaloguj się za pomocą hasła ustawionego dla routera. 2. Przejdź do Zaawansowane > Bezprzewodowe > Filtrowanie MAC i włącz Filtrowanie MAC sieci bezprzewodowej. 3. Wybierz regułę filtrowania, aby albo zablokować, albo zezwolić urządzeniu(om) z listy. 4. W przypadku blokowania, wybierz „Zablokuj dostęp bezprzewodowy urządzeniom na poniższej liście” i kliknij Zapisz. 5. Wybierz urządzenie(a) do zablokowania w tabeli Urządzenia Online i kliknij Zablokuj. 6. W przypadku zezwalania, wybierz „Zezwól na dostęp bezprzewodowy tylko urządzeniom na poniższej liście” i kliknij Zapisz, a następnie kliknij Dodaj, \\aby wprowadzić adres MAC i opis urządzenia, i kliknij OK.
 \end{itemize}
 
-Rysunek~\ref{fig:demo_factual} przedstawia przykład odpowiedzi 
-na pytanie faktyczne dotyczące specyfikacji urządzenia.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{images/implementation/demo_factual.png}
-\caption{Przykład odpowiedzi na pytanie faktyczne}
-\label{fig:demo_factual}
-\end{figure}
-
-\newpage
-Rysunek~\ref{fig:demo_procedural} przedstawia odpowiedź na pytanie 
-proceduralne z instrukcją krok po kroku.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{images/implementation/demo_procedural.png}
-\caption{Przykład odpowiedzi na pytanie proceduralne}
-\label{fig:demo_procedural}
-\end{figure}
 
 \newpage
 \subsection{Wyświetlanie źródeł}
 
-Każda odpowiedź zawiera rozwijalną sekcję ,,Źródła'' -- fragmenty 
-dokumentu użyte do wygenerowania odpowiedzi. 
-Rysunek~\ref{fig:demo_sources} przedstawia przykład wyświetlonych źródeł.
 
 \begin{figure}[H]
 \centering
@@ -71,18 +86,18 @@ Rysunek~\ref{fig:demo_sources} przedstawia przykład wyświetlonych źródeł.
 \caption{Źródła użyte do wygenerowania odpowiedzi}
 \label{fig:demo_sources}
 \end{figure}
+Każda odpowiedź zawiera rozwijalną sekcję ,,Źródła'' -- fragmenty 
+dokumentu użyte \\do wygenerowania odpowiedzi. 
+Rysunek~\ref{fig:demo_sources} przedstawia przykład wyświetlonych źródeł.
 
 Sekcja źródeł umożliwia użytkownikowi weryfikację poprawności 
 odpowiedzi oraz przeczytanie szerszego kontekstu z oryginalnego 
-dokumentu.
+dokumentu w razie wątpliwości co do otrzymanej odpowiedzi.
 
 \newpage
 \subsection{Historia konwersacji}
 
-System zapisuje wszystkie konwersacje użytkownika w bazie danych. 
-Panel boczny wyświetla listę poprzednich rozmów. Użytkownik ma możliwość
-przełączania się między nimi. Rysunek~\ref{fig:demo_history} 
-przedstawia interfejs z kilkoma zapisanymi konwersacjami.
+
 
 \begin{figure}[H]
 \centering
@@ -90,17 +105,20 @@ przedstawia interfejs z kilkoma zapisanymi konwersacjami.
 \caption{Panel boczny z historią konwersacji}
 \label{fig:demo_history}
 \end{figure}
-
+System zapisuje wszystkie konwersacje użytkownika w bazie danych. 
+Panel boczny wyświetla listę poprzednich rozmów. Użytkownik ma możliwość
+przełączania się między nimi. Rysunek~\ref{fig:demo_history} 
+przedstawia interfejs z kilkoma zapisanymi konwersacjami.
 Każda pozycja na liście zawiera tytuł konwersacji (generowany na podstawie nazwy przesłanego dokumentu) oraz liczbę wiadomości. Użytkownik może również usunąć wybraną konwersację klikając przycisk ,,×''.
 
 \subsection{Wznawianie konwersacji}
 
 Ważną funkcjonalnością systemu jest możliwość wznawiania 
-poprzednich rozmów. Po kliknięciu użytkownika na konwersację w panelu 
+poprzednich rozmów. \\Po kliknięciu użytkownika na konwersację w panelu 
 bocznym system ładuje zapisaną bazę wektorową z dysku oraz 
 wyświetla pełną historię wiadomości.
 
 Dzięki temu użytkownik może kontynuować pracę z dokumentem 
 bez konieczności ponownego przesyłania pliku PDF i oczekiwania 
-na przetworzenie. Stan konwersacji jest zachowywany po 
+na przetworzenie. Stan konwersacji jest zachowywany \\po 
 wylogowaniu i ponownym zalogowaniu.

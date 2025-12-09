@@ -122,7 +122,7 @@ class Message(db.Model):
 \subsection{System autoryzacji}
 
 System autoryzacji opiera się na tokenach JWT (JSON Web Token), które
-pozwalają na uwierzytelnianie użytkowników bez konieczności
+pozwalają \\na uwierzytelnianie użytkowników bez konieczności
 ponownego logowania, token traci ważność po 24 godzinach. Przechowuje on również
 identyfikator użytkownika. Po wysłaniu żądania token jest przekazywany w nagłówku HTTP \texttt{Authorization}.
 
@@ -160,6 +160,21 @@ def token_required(f):
 Główna klasa \texttt{RAGPipeline} implementuje proces przetwarzania 
 dokumentu i generowania odpowiedzi. Listing~\ref{lst:rag_init} przedstawia 
 inicjalizację pipeline z konfigurowalnymi parametrami.
+Metoda \texttt{process\_document} przetwarza dokument PDF w czterech krokach:
+
+\begin{enumerate}
+    \item \textbf{Ekstrakcja tekstu} -- biblioteka PyMuPDF wyodrębnia 
+    tekst z pliku PDF
+    \item \textbf{Chunking} -- tekst jest dzielony na fragmenty o rozmiarze 
+    800 tokenów z nakładką 100 tokenów
+    \item \textbf{Embeddingi} -- każdy fragment jest przekształcany 
+    w wektor przy użyciu modelu \texttt{text-embedding-3-large}
+    \item \textbf{Indeksowanie} -- wektory są zapisywane w bazie FAISS
+\end{enumerate}
+
+Baza wektorowa (vector store) jest zapisywana na dysku w katalogu \texttt{vectorstores/}, 
+\\co umożliwia wznawianie konwersacji bez ponownego przetwarzania dokumentu.
+
 
 \begin{lstlisting}[language=Python, caption={Inicjalizacja RAG Pipeline}, label={lst:rag_init}]
 class RAGPipeline:
@@ -177,20 +192,6 @@ class RAGPipeline:
         self.vectorstore = None
 \end{lstlisting}
 
-Metoda \texttt{process\_document} przetwarza dokument PDF w czterech krokach:
-
-\begin{enumerate}
-    \item \textbf{Ekstrakcja tekstu} -- biblioteka PyMuPDF wyodrębnia 
-    tekst z pliku PDF
-    \item \textbf{Chunking} -- tekst jest dzielony na fragmenty o rozmiarze 
-    800 tokenów z nakładką 100 tokenów
-    \item \textbf{Embeddingi} -- każdy fragment jest przekształcany 
-    w wektor przy użyciu modelu \texttt{text-embedding-3-large}
-    \item \textbf{Indeksowanie} -- wektory są zapisywane w bazie FAISS
-\end{enumerate}
-
-Vector store jest zapisywany na dysku w katalogu \texttt{vectorstores/}, 
-co umożliwia wznawianie konwersacji bez ponownego przetwarzania dokumentu.
 
 \newpage
 \subsection{Klasyfikator pytań}

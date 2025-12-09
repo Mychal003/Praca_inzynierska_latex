@@ -21,13 +21,13 @@ W toku dalszych badań wyewoluowały jednak dwa główne, wyspecjalizowane nurty
 \begin{itemize}
     \item \textbf{Modele typu encoder (dwukierunkowe)} -- np. BERT~\cite{devlin2019bert}. 
     Modele te przetwarzają tekst, uwzględniając kontekst z obu stron jednocześnie 
-    (mechanizm \textit{self-attention}), co czyni je idealnymi do zadań wymagających 
+    (mechanizm \textit{self-attention}), \\co czyni je idealnymi do zadań wymagających 
     głębokiego zrozumienia tekstu, takich jak klasyfikacja czy ekstrakcja odpowiedzi.
     
     \item \textbf{Modele typu decoder (autoregresywne)} -- np. GPT~\cite{brown2020language}. 
     Modele te wykorzystują maskowany mechanizm uwagi, przetwarzając tekst sekwencyjnie 
     (od lewej do prawej), co jest kluczowe dla zadań generatywnych, gdzie model 
-    przewiduje kolejne słowo na podstawie poprzednich.
+    przewiduje kolejne słowo \\na podstawie poprzednich.
 \end{itemize}
 
 
@@ -43,7 +43,7 @@ akceptującym zarówno tekst, jak i obrazy na wejściu. Wprowadził on znaczące
 ulepszenia w zakresie zdolności rozumowania, osiągając wyniki na poziomie 
 ludzkim w wielu profesjonalnych egzaminach akademickich.
 
-Poimo tych osiągnięć, modele LLM posiadają istotne ograniczenia, które dla skuteczności i celowości pożądanych rozwiązań muszą być wyeliminowane. Architektura RAG staje się tym samym kluczowym narzedziem do korygowania i przezwyciężania istotnych ograniczeń modeli LLM.
+Pomimo tych osiągnięć, modele LLM posiadają istotne ograniczenia, które dla skuteczności i celowości pożądanych rozwiązań muszą być wyeliminowane. Architektura RAG staje się tym samym kluczowym narzedziem do korygowania i przezwyciężania istotnych ograniczeń modeli LLM.
 \begin{itemize}
     \item \textbf{Nieaktualna wiedza (\textit{knowledge cutoff})} -- wiedza modeli 
     jest zamrożona w momencie zakończenia treningu (np. wrzesień 2021 dla 
@@ -84,7 +84,7 @@ nad klasycznymi modelami LLM:
     w konkretnych fragmentach tekstu, co pozwala na weryfikację faktów i zmniejsza 
     ryzyko halucynacji~\cite{lewis2020retrieval, gao2023retrieval}.
     \item \textbf{Precyzja w zadaniach intensywnych wiedzą} – RAG osiąga lepsze 
-    wyniki w zadaniach wymagających dostępu do szczegółowych faktów (knowledge-intensive tasks) 
+    wyniki \\w zadaniach wymagających dostępu do szczegółowych faktów (knowledge-intensive tasks) 
     niż znacznie większe modele parametryczne~\cite{lewis2020retrieval}.
 \end{itemize}
 
@@ -101,7 +101,7 @@ będzie generował odpowiedzi niespójne z odnalezionym kontekstem~\cite{gao2023
 
 \subsection{Advanced RAG}
 Wprowadzono go w celu przezwyciężenia ograniczeń wersji naiwnej. Kluczową zmianą 
-jest dodanie procesów optymalizacji przed i po wyszukiwaniu (pre-retrieval 
+\\jest dodanie procesów optymalizacji przed i po wyszukiwaniu (pre-retrieval 
 i post-retrieval)~\cite{gao2023retrieval}. Obejmuje to m.in.:
 \begin{itemize}
     \item \textbf{Optymalizację zapytań} – np. przepisywanie zapytań (query rewriting) 
@@ -123,14 +123,14 @@ z wyszukiwania (Adaptive Retrieval)~\cite{gao2023retrieval}.
 
 Fundamentem skuteczności systemów RAG jest mechanizm wyszukiwania semantycznego 
 (Semantic Search). W przeciwieństwie do tradycyjnych metod opartych na słowach 
-kluczowych (tzw. \textit{Sparse Retrieval}, np. algorytm BM25), wyszukiwanie 
-semantyczne operuje na znaczeniu tekstu, na treści rozumianej jako ogół bez skupiania się na poszczeglnych wyrazach. Pozwala to na znalezienie dokumentów, 
+kluczowych (np. algorytm BM25), wyszukiwanie 
+semantyczne operuje na znaczeniu tekstu, na treści rozumianej jako ogół bez skupiania się na poszczególnych wyrazach. Pozwala to na znalezienie dokumentów, 
 które odpowiadają intencji zapytania, nawet jeśli nie zawierają tych samych 
 słów (rozwiązanie problemu luki leksykalnej).
 
 Kluczowym pojęciem są tutaj \textbf{embeddingi} (reprezentacje wektorowe) -- 
 gęste wektory liczb rzeczywistych, które mapują tekst do n-wymiarowej przestrzeni 
-w taki sposób, aby teksty o podobnym znaczeniu znajdowały się blisko siebie. 
+w taki sposób, \\aby teksty o podobnym znaczeniu znajdowały się blisko siebie. 
 Ewolucję modeli tworzących te reprezentacje można podzielić na trzy etapy:
 
 \begin{enumerate}
@@ -156,7 +156,7 @@ Ewolucję modeli tworzących te reprezentacje można podzielić na trzy etapy:
 
 Współczesne systemy wykorzystują także komercyjne modele (np. OpenAI text-embedding) 
 lub modele open-source z rankingu MTEB (Massive Text Embedding Benchmark). 
-Do przechowywania i przeszukiwania milionów wektorów wykorzystuje się wyspecjalizowane 
+\\Do przechowywania i przeszukiwania milionów wektorów wykorzystuje się wyspecjalizowane 
 bazy wektorowe. Pionierskim rozwiązaniem w tej dziedzinie jest biblioteka 
 FAISS (Facebook AI Similarity Search)~\cite{johnson2019faiss}, która implementuje 
 efektywne algorytmy wyszukiwania przybliżonego najbliższego sąsiada (ANN), 
@@ -227,7 +227,7 @@ odpowiedzi według zdefiniowanych kryteriów, takich jak:
 \begin{itemize}
     \item \textbf{Groundedness (Faithfulness)} -- czy odpowiedź wynika bezpośrednio z pobranych dokumentów?
     \item \textbf{Answer Relevance} -- czy odpowiedź jest na temat i realizuje intencję zapytania?
-    \item \textbf{Context Relevance} -- czy pobrane dokumenty zawierały informacje niezbędne do odpowiedzi?
+    \item \textbf{Context Relevance} -- czy pobrane dokumenty zawierały informacje niezbędne \\do odpowiedzi?
 \end{itemize}
 
 Badania wykazują, że oceny sędziów LLM osiągają ponad 80\% zgodności z ocenami ludzkimi~\cite{zheng2023judging}. 
@@ -241,7 +241,7 @@ Prompt engineering to dziedzina zajmująca się projektowaniem instrukcji
 dla modeli językowych w celu uzyskania pożądanych odpowiedzi.
 Wei i zespół~\cite{wei2022chain} pokazali, że technika Chain-of-Thought
 (łańcuch myślenia) znacząco poprawia zdolności rozumowania modeli
-w zadaniach arytmetycznych, zdroworozsądkowych i symbolicznych.
+\\w zadaniach arytmetycznych, zdroworozsądkowych i symbolicznych.
 
 W kontekście systemów RAG prompt engineering obejmuje:
 \begin{itemize}
@@ -256,13 +256,13 @@ White i zespół~\cite{white2023prompt} przedstawili systematyczny katalog
 wzorców promptów, traktując inżynierię promptów analogicznie do \textbf{wzorców
 projektowych w inżynierii oprogramowania}. Wykazali, że odpowiednie sformułowanie
 instrukcji i ustrukturyzowanie interakcji może znacząco wpłynąć na jakość
-odpowiedzi i umożliwić rozwiązywanie złożonych problemów bez konieczności
+odpowiedzi i umożliwić rozwiązywanie złożonych problemów \\bez konieczności
 zmiany parametrów (wag) modelu.
 
 \section{Podsumowanie przeglądu literatury}
 
 W świetle dotychczasowych publikacji system  RAG jawi się jako  aktywny i perspektywiczny obszar badań, który dzięki swojej dynamice
-łączy klasyczne wyszukiwanie informacji z generatywną sztuczną 
+łączy klasyczne wyszukiwanie informacji \\z generatywną sztuczną 
 inteligencją. Kluczowe wyzwania w tym obszarze obejmują optymalizację parametrów 
 przetwarzania dokumentów (chunking), dobór odpowiednich, semantycznych metryk 
 ewaluacji oraz projektowanie skutecznych promptów sterujących zachowaniem modelu.

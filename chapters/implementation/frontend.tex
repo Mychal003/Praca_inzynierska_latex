@@ -83,6 +83,16 @@ umożliwia przełączanie między konwersacjami oraz tworzenie nowych.
 
 Moduł \texttt{auth.js} zarządza tokenami JWT i stanem użytkownika. 
 Listing~\ref{lst:auth_module} przedstawia główne funkcje autoryzacji.
+Poniższy listing przedstawia główne funkcje modułu \texttt{auth.js}:
+
+\begin{itemize}
+    \item \textbf{getToken()} -- pobiera aktualny token JWT z pamięci lokalnej
+    \item \textbf{setToken(token)} -- zapisuje token JWT w pamięci lokalnej
+    \item \textbf{getHeaders()} -- przygotowuje nagłówki HTTP z tokenem dla żądań
+    \item \textbf{login(username, password)} -- wysyła dane logowania do API,
+    odbiera token JWT \\i zapisuje go w lokalnej pamięci
+\end{itemize}
+
 
 \begin{lstlisting}[language=JavaScript, caption={Moduł autoryzacji}, label={lst:auth_module}]
 const Auth = {
@@ -117,23 +127,23 @@ const Auth = {
     }
 };
 \end{lstlisting}
-Powyższy listing przedstawia główne funkcje modułu \texttt{auth.js}:
 
-\begin{itemize}
-    \item \textbf{getToken()} -- pobiera aktualny token JWT z pamięci lokalnej
-    \item \textbf{setToken(token)} -- zapisuje token JWT w pamięci lokalnej
-    \item \textbf{getHeaders()} -- przygotowuje nagłówki HTTP z tokenem dla żądań
-    \item \textbf{login(username, password)} -- wysyła dane logowania do API,
-    odbiera token JWT i zapisuje go w lokalnej pamięci
-\end{itemize}
-
-Dzięki temu moduł umożliwia bezpieczne uwierzytelnianie użytkowników
-oraz ochronę chronionych endpointów w aplikacji.
 \newpage
 \subsection{Zarządzanie konwersacjami}
 
-Aplikacja umożliwia tworzenie, przeglądanie i usuwanie konwersacji. 
-Listing~\ref{lst:conversations} przedstawia funkcje zarządzania rozmowami.
+Aplikacja umożliwia użytkownikowi tworzenie nowych konwersacji,
+przeglądanie historii oraz ponowne otwieranie wcześniejszych rozmów.
+Listing~\ref{lst:conversations} przedstawia przedstawia główne funkcje odpowiedzialne za
+zarządzanie konwersacjami:
+
+\begin{itemize}
+    \item \textbf{loadConversations()} -- pobiera listę rozmów użytkownika
+    z API i aktualizuje interfejs
+    \item \textbf{createNewConversation()} -- tworzy nową konwersację
+    w bazie danych i ustawia \\ją jako aktywną
+    \item \textbf{openConversation(conversationId)} -- pobiera treść wybranej
+    konwersacji oraz wyświetla jej wiadomości w interfejsie chatu
+\end{itemize}
 
 \begin{lstlisting}[language=JavaScript, caption={Zarządzanie konwersacjami}, label={lst:conversations}]
 async function loadConversations() {
@@ -161,12 +171,20 @@ async function openConversation(conversationId) {
 }
 \end{lstlisting}
 
+
 \newpage
 \subsection{Komunikacja z API}
 
-Wszystkie żądania do API są realizowane przez funkcję pomocniczą 
-\texttt{apiCall}, która automatycznie dodaje nagłówki autoryzacji. 
-Listing~\ref{lst:ask_question} przedstawia funkcję wysyłania pytania.
+Komunikacja aplikacji z backendem odbywa się za pomocą funkcji \texttt{apiCall}, która dodaje wymagane nagłówki (m.in. autoryzacyjne) i stndaryzuje obsługę błędów. Podczas wysyłania pytania wiadomość użytkownika jest dodawana do interfejsu, a następnie zapytanie trafia do systemu RAG.
+
+Odpowiedź z API zawiera:
+\begin{itemize}
+\item wygenerowaną odpowiedź asystenta,
+\item kategorię pytania,
+\item listę fragmentów źródłowych z dokumentacji.
+\end{itemize}
+
+Listing~\ref{lst:ask_question} przedstawia funkcję odpowiedzialną za przesłanie pytania i wyświetlenie odpowiedzi po stronie klienta.
 
 \begin{lstlisting}[language=JavaScript, caption={Wysyłanie pytania do API}, label={lst:ask_question}]
 async function askQuestion() {
@@ -199,7 +217,5 @@ async function askQuestion() {
 }
 \end{lstlisting}
 
-Odpowiedzi asystenta zawierają kategorię pytania oraz źródła 
-(fragmenty dokumentu), które można rozwinąć klikając w sekcję 
-,,Źródła'' pod odpowiedzią.
+
 \newpage

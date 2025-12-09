@@ -1,12 +1,7 @@
 \chapter{Metryki i ewaluacja systemu}\label{chapter:methodology}
 
 
-Niniejszy rozdział przedstawi użyte metryki oraz wyniki ewaluacji zaimplementowanego systemu RAG. Badania koncentrują się na weryfikacji skuteczności systemu działającego \\w konfiguracji uznanej za optymalną dla obsługiwanej dokumentacji technicznej:
-\begin{itemize}
-    \item \textbf{Rozmiar fragmentu (Chunk size):} 800 znaków
-    \item \textbf{Nakładanie się (Overlap):} 100 znaków
-    \item \textbf{Liczba pobieranych fragmentów (k):} 10
-\end{itemize}
+Niniejszy rozdział przedstawa użyte metryki oraz wyniki ewaluacji zaimplementowanego systemu RAG. Wyniki konfiguracji zostały przeprowadzone lokalnie i potwierdzają skuteczności systemu.
 
 Poniżej opisano przygotowany zbiór danych testowych, zdefiniowano zastosowane metryki dla modułów wyszukiwania (Retrieval) i generacji, a następnie przedstawiono szczegółowe wyniki wydajności systemu oraz analizę wpływu inżynierii promptów na jakość odpowiedzi.
 
@@ -31,7 +26,7 @@ a $R$ to zbiór wszystkich istotnych fragmentów (ground truth).
 
 Interpretacja: wysoka wartość Precision@k oznacza, że system rzadko 
 zwraca nieistotne fragmenty w top-$k$ wynikach. Wartość 1.0 oznacza, 
-że wszystkie zwrócone fragmenty są istotne.
+że wszystkie zwrócone fragmenty \\są istotne.
 
 \subsection{Recall@k}
 
@@ -66,11 +61,11 @@ MRR mierzy na jakiej pozycji w rankingu znajduje się pierwszy
 istotny fragment:
 
 \begin{equation}
-\text{MRR} = \frac{1}{\text{rank}_1}
+\text{MRR} = \frac{1}{|Q|} \sum_{q=1}^{|Q|} \frac{1}{\text{rank}_{1,q}}
 \end{equation}
 
-gdzie $\text{rank}_1$ to pozycja pierwszego istotnego fragmentu 
-(licząc od 1).
+gdzie $|Q|$ to liczba zapytań w zbiorze ewaluacyjnym, a $\text{rank}_{1,q}$ to pozycja pierwszego istotnego fragmentu dla zapytania $q$ (licząc od 1).
+
 
 Interpretacja: MRR = 1.0 oznacza, że pierwszy zwrócony fragment 
 jest zawsze istotny. MRR = 0.5 oznacza, że pierwszy istotny fragment 
@@ -95,10 +90,10 @@ gdzie $\text{rel}_i$ to istotność fragmentu na pozycji $i$ (0 lub 1),
 a IDCG@k to idealna wartość DCG (gdy wszystkie istotne fragmenty 
 są na początku rankingu).
 
-Interpretacja: NDCG@k = 1.0 oznacza idealny ranking, gdzie wszystkie 
+Interpretacja: NDCG@k = 1.0 oznacza idealny ranking, w którym wszystkie 
 istotne fragmenty znajdują się na najwyższych pozycjach. Metryka ta 
-lepiej niż Precision@k oddaje jakość rankingu, ponieważ karze za 
-umieszczanie istotnych fragmentów na niższych pozycjach.
+lepiej niż Precision@k wyznacza jakość rankingu, ponieważ uwzględnia kary za 
+umieszczanie istotnych fragmentów na niższych pozycjach rankingu.
 
 \subsection{Average Precision (AP)}
 
@@ -119,14 +114,10 @@ systemy które umieszczają istotne fragmenty wysoko w rankingu.
 
 Metryki retrieval (Precision@k, Recall@k, MRR, NDCG) wymagają 
 annotacji istotnych fragmentów dokumentu. Ponieważ annotacje 
-\texttt{relevant\_chunk\_indices} są specyficzne dla konkretnego 
+\texttt{relevant\_chunk\_indices} są specyficzne \\dla konkretnego 
 podziału dokumentu (chunk\_size=800, overlap=100), metryki 
 retrieval obliczono tylko dla konfiguracji bazowej.
 
-Eksperymenty z różnymi wartościami chunk\_size ewaluowano 
-przy użyciu metryk generacji (ROUGE-1 F1, Semantic Similarity), 
-które mierzą jakość końcowej odpowiedzi niezależnie od 
-wewnętrznego podziału dokumentu.
 
 \section{Metryki ewaluacji generacji}\label{sec:generation-metrics}
 
@@ -153,8 +144,8 @@ ROUGE-1 wykorzystuje unigramy (pojedyncze słowa):
 \end{equation}
 
 Interpretacja: ROUGE-1 F1 mierzy jak dużo słów z odpowiedzi 
-referencyjnej pojawia się w wygenerowanej odpowiedzi i odwrotnie. 
-Wartości powyżej 0.5 wskazują na znaczący overlap słownictwa. 
+referencyjnej pojawia się \\w wygenerowanej odpowiedzi i odwrotnie. 
+Wartości powyżej 0.5 wskazują na znaczące pokrycie się słownictwa. 
 Ograniczeniem metryki jest brak uwzględnienia synonimów i parafraz.
 
 \subsection{Semantic Similarity}
@@ -175,23 +166,13 @@ Interpretacja: wartość 1.0 oznacza identyczne znaczenie semantyczne,
 wskazują na wysokie podobieństwo semantyczne. Metryka ta lepiej 
 niż ROUGE radzi sobie z parafrazami i synonimami.
 
-\subsection{Token Overlap}
-
-Token Overlap to prostsza metryka mierząca procent wspólnych słów:
-
-\begin{equation}
-\text{Token Overlap} = \frac{|\text{tokens}_{gen} \cap \text{tokens}_{ref}|}{|\text{tokens}_{ref}|}
-\end{equation}
-
-Interpretacja: metryka pomocnicza, przydatna do szybkiej oceny 
-pokrycia słownictwa.
 
 
 \section{LLM-as-a-Judge}\label{sec:llm-judge}
 
 Tradycyjne metryki leksykalne i semantyczne mają ograniczenia w ocenie 
 jakości odpowiedzi. Dlatego zastosowano podejście LLM-as-a-Judge, 
-gdzie model GPT-4o ocenia odpowiedzi w pięciu wymiarach.
+gdzie model GPT-4o ocenia odpowiedzi \\w pięciu wymiarach.
 
 \subsection{Wymiary oceny}
 
@@ -284,12 +265,81 @@ gdy nie działa WiFi) \\
 Dla każdego pytania przygotowano:
 \begin{itemize}
     \item \textbf{Expected answer} -- odpowiedź referencyjna wyekstrahowana 
-    bezpośrednio z dokumentu przez model GPT-4o z instrukcją zachowania 
-    oryginalnego sformułowania
+    bezpośrednio z dokumentu PDF przez model GPT-4o z promptem zawierającym instrukcje zachowania oryginalnego sformułowania
     \item \textbf{Relevant chunk indices} -- lista indeksów fragmentów 
     dokumentu zawierających informacje potrzebne do odpowiedzi, 
     annotowana przez model GPT-4o
 \end{itemize}
+
+Pełna lista pytań wykorzystanych w ewaluacji, wraz z ich polskim tłumaczeniem, \\została przedstawiona w Tabeli~\ref{tab:all-questions}.
+
+\begin{longtable}{|p{0.5cm}|p{6.5cm}|p{6.5cm}|}
+\caption{Pełna lista pytań testowych} \label{tab:all-questions} \\
+\hline
+\textbf{Lp.} & \textbf{Pytanie (Oryginał)} & \textbf{Pytanie (Tłumaczenie)} \\
+\hline
+\endfirsthead
+\multicolumn{3}{c}%
+{\tablename\ \thetable\ -- ciąg dalszy z poprzedniej strony} \\
+\hline
+\textbf{Lp.} & \textbf{Pytanie (Oryginał)} & \textbf{Pytanie (Tłumaczenie)} \\
+\hline
+\endhead
+\hline \multicolumn{3}{r}{{Ciąg dalszy na następnej stronie}} \\
+\endfoot
+\hline
+\endlastfoot
+
+1 & What is the full model name and type of this router? & Jaka jest pełna nazwa modelu i typ tego routera? \\
+\hline
+2 & What is the default web address to access the router interface? & Jaki jest domyślny adres strony internetowej do dostępu do interfejsu routera? \\
+\hline
+3 & What are the default login credentials for the router? & Jakie są domyślne dane logowania do routera? \\
+\hline
+4 & What port is used to connect the router to the Internet? & Który port służy do podłączenia routera do Internetu? \\
+\hline
+5 & How many operation modes does the Archer D7 support? & Ile trybów pracy obsługuje Archer D7? \\
+\hline
+6 & What USB features does the router support? & Jakie funkcje USB obsługuje router? \\
+\hline
+7 & What is the WPS button used for on the Archer D7? & Do czego służy przycisk WPS w modelu Archer D7? \\
+\hline
+8 & What wireless security functions does the router provide? & Jakie funkcje zabezpieczeń sieci bezprzewodowej oferuje router? \\
+\hline
+9 & How do you perform a factory reset on the Archer D7? & Jak wykonać reset do ustawień fabrycznych w Archer D7? \\
+\hline
+10 & How do you access the router's web interface for the first time? & Jak uzyskać dostęp do interfejsu sieciowego routera po raz pierwszy? \\
+\hline
+11 & How do you set up the router using Quick Setup Wizard? & Jak skonfigurować router za pomocą kreatora Quick Setup? \\
+\hline
+12 & How do you change the wireless network name and password? & Jak zmienić nazwę sieci bezprzewodowej i hasło? \\
+\hline
+13 & How do you turn on or off the WiFi function on the router? & Jak włączyć lub wyłączyć funkcję WiFi w routerze? \\
+\hline
+14 & How do you access a USB disk connected to the router via network? & Jak uzyskać dostęp do dysku USB podłączonego do routera przez sieć? \\
+\hline
+15 & How do you set up parental controls on the router? & Jak skonfigurować kontrolę rodzicielską w routerze? \\
+\hline
+16 & How do you customize the USB disk server name? & Jak dostosować nazwę serwera dysku USB? \\
+\hline
+17 & How do you enable MAC Filtering to control wireless access? & Jak włączyć filtrowanie adresów MAC, aby kontrolować dostęp bezprzewodowy? \\
+\hline
+18 & What should you do if you cannot access the router's web interface? & Co należy zrobić, jeśli nie można uzyskać dostępu do interfejsu sieciowego routera? \\
+\hline
+19 & How do you recover access if you forgot the router's login password? & Jak odzyskać dostęp, jeśli zapomniałeś hasła logowania do routera? \\
+\hline
+20 & What does it mean if the ADSL LED is not lit on the router? & Co oznacza, jeśli dioda ADSL na routerze nie świeci? \\
+\hline
+21 & What are the possible causes if wireless devices cannot connect to the network? & Jakie są możliwe przyczyny, jeśli urządzenia bezprzewodowe nie mogą połączyć się z siecią? \\
+\hline
+22 & Why might bandwidth control not work as expected? & Dlaczego kontrola przepustowości może nie działać zgodnie z oczekiwaniami? \\
+\hline
+23 & What is the purpose of IP \& MAC Binding feature? & Jaki jest cel funkcji wiązania IP i MAC? \\
+\hline
+24 & What is Access Control and how does it differ from MAC Filtering? & Czym jest kontrola dostępu i czym różni się od filtrowania MAC? \\
+\hline
+25 & How can you remotely access USB storage connected to the router? & Jak można zdalnie uzyskać dostęp do pamięci USB podłączonej do routera? \\
+\end{longtable}
 
 Proces przygotowania datasetu był półautomatyczny: model językowy 
 ekstrahował odpowiedzi i annotował istotne fragmenty, a następnie 
@@ -364,14 +414,14 @@ dataset ewaluacyjny:
     \item Model annotuje które fragmenty są istotne dla pytania
     \item Wyniki zapisywane są w formacie JSON
 \end{enumerate}
-
+\newpage
 
 
 \section{Ewaluacja retrieval}
 
-Niniejsza sekcja przedstawia wyniki ewaluacji modułu wyszukiwania (retrieval), który odpowiada za wybór użytecznych fragmentów dokumentacji najbardziej zbliżonych semantycznie do zapytania użytkownika. Analizę przeprowadzono dla przyjętej konfiguracji systemu, wykorzystującej podział na fragmenty o długości 800 znaków z nakładaniem się (overlap) 100 znaków. W procesie tym zastosowano model embeddingów \texttt{text-embedding-3-large} oraz indeks wektorowy FAISS. Celem ewaluacji jest ocena skuteczności modułu wyszukiwania.
+Niniejsza sekcja przedstawia wyniki ewaluacji modułu wyszukiwania (retrieval), \\który odpowiada za wybór użytecznych fragmentów dokumentacji najbardziej zbliżonych semantycznie do zapytania użytkownika. Analizę przeprowadzono dla przyjętej konfiguracji systemu, wykorzystującej podział na fragmenty o długości 800 znaków z nakładaniem się (overlap) 100 znaków. W procesie tym zastosowano model embeddingów \texttt{text-embedding-3-large} \\oraz indeks wektorowy FAISS. Celem ewaluacji jest ocena skuteczności modułu wyszukiwania.
 
-\newpage
+
 \subsection{Precision i Recall}
 
 Rysunek~\ref{fig:precision_recall} przedstawia porównanie metryk 
@@ -386,9 +436,9 @@ Precision i Recall dla różnych wartości k (liczby pobieranych fragmentów).
 
 Wraz ze wzrostem k obserwujemy spadek Precision (pobieramy więcej 
 fragmentów, \\w tym mniej trafnych) oraz wzrost Recall (znajdujemy więcej 
-trafnych fragmentów). Jest to klasyczny kompromis w systemach 
+trafnych fragmentów). \\Jest to klasyczny kompromis w systemach 
 wyszukiwania informacji (information retrieval trade-off).
-
+\newpage
 \subsection{Podsumowanie metryk wyszukiwania}
 
 Tabela~\ref{tab:retrieval_results} przedstawia szczegółowe wyniki 
@@ -411,7 +461,7 @@ MRR & \multicolumn{4}{c|}{0.920} \\
 \hline
 \end{tabular}
 \end{table}
-\newpage
+
 \subsection{Jakość rankingu (NDCG)}
 
 Rysunek~\ref{fig:ndcg} przedstawia jak zmienia się metryka NDCG 
@@ -456,13 +506,13 @@ Uzyskane wyniki wskazują na wysoką jakość modułu wyszukiwania:
     precyzją a pokryciem.
     
     \item \textbf{Precision@1 = 0.880} -- w 88\% przypadków 
-    pierwszy pobrany fragment jest trafny, co jest kluczowe 
+    pierwszy pobrany fragment jest trafny, \\co jest kluczowe 
     dla jakości odpowiedzi RAG.
 \end{itemize}
 
 Wysoka wartość MRR oraz Precision@1 są kluczowe dla systemu RAG, 
 ponieważ oznaczają, że najważniejsze informacje trafiają na początek 
-kontekstu przekazywanego do modelu językowego. Dzięki temu model 
+kontekstu przekazywanego \\do modelu językowego. Dzięki temu model 
 ma dostęp do najbardziej istotnych merytorycznie fragmentów już na początku 
 promptu.
 \newpage
@@ -475,7 +525,21 @@ promptu.
 \section{Wyniki ewaluacji generacji (End-to-End)}
 
 
-Po zweryfikowaniu skuteczności modułu wyszukiwania, przeprowadzono ewaluację całego systemu RAG (Retrieval-Augmented Generation). Do testów wykorzystano konfigurację, która w toku prac implementacyjnych wykazała najlepszy balans między jakością a wydajnością: podział dokumentu na fragmenty o długości 800 znaków z nakładaniem się (overlap) 100 znaków, przy pobieraniu 10 najbardziej pasujących fragmentów ($k=10$).
+Po zweryfikowaniu skuteczności modułu wyszukiwania, przeprowadzono ewaluację całego systemu RAG (Retrieval-Augmented Generation). Do testów wykorzystano konfigurację, \\która w toku prac implementacyjnych wykazała najlepszy balans między jakością a wydajnością: podział dokumentu na fragmenty o długości 800 znaków z nakładaniem się (overlap) 100 znaków, przy pobieraniu 10 najbardziej pasujących fragmentów ($k=10$).
+
+\subsection{Dobór parametrów procesu RAG}
+Dobór parametrów procesu RAG został przeprowadzony metodą eksperymentalną, przyjmując za punkt wyjścia rekomendacje literaturowe dotyczące systemów RAG \cite{gao2023retrieval}. Przyjęto następującą konfigurację:
+
+\begin{enumerate}
+    \item \textbf{Rozmiar fragmentu (Chunk size: 800 znaków):} Wielkość ta została dobrana tak, aby zachować semantyczną spójność akapitów technicznych. W literaturze wskazuje się, że zbyt małe fragmenty pozbawiają model niezbędnego do udzielania poprawnej odpowiedzi kontekstu, natomiast zbyt duże mogą wprowadzać szum informacyjny („noise”) i utrudniać precyzyjne wyszukiwanie \cite{gao2023retrieval}.
+
+    \item \textbf{Liczba dokumentów (Top-k: 10):} Wartość ta stanowi kompromis między kompletnością wyszukiwania (Recall) a efektywnością wykorzystania kontekstu przez model. Badania przeprowadzone przez Liu \cite{liu2023lost} wykazały że modele językowe najlepiej wykorzystują informacje znajdujące się na początku i końcu kontekstu. Wybór $k=10$ pozwala zachować wysoki Recall przy jednoczesnym ograniczeniu szumu informacyjnego.
+
+    \item \textbf{Nakładanie fragmentów (Overlap: 100 znaków):} Wartość ta 
+    stanowi około 12.5\% rozmiaru fragmentu, co mieści się w zalecanym 
+    zakresie 10--20\% \cite{nvidia2025chunking} 
+
+\end{enumerate}
 
 \subsection{Ogólna jakość odpowiedzi}
 
@@ -506,9 +570,9 @@ Success Rate & 100\% \\
 
 System osiąga bardzo wysokie wyniki we wszystkich wymiarach oceny LLM Judge, \\z ogólną oceną jakości (Overall) na poziomie 0.938 (w skali 0-1). 
 
-Szczególnie istotny jest perfekcyjny wynik \textbf{Groundedness (1.000)}. Oznacza to, że system nie generuje halucynacji -- wszystkie odpowiedzi udzielone przez model były w pełni oparte na informacjach znalezionych w dostarczonych fragmentach dokumentacji technicznej. Potwierdza to skuteczność zastosowanego mechanizmu nakładania się fragmentów (overlap) w zachowaniu ciągłości kontekstu.
-\newpage
-Rysunek~\ref{fig:llm_judge_radar} wizualizuje profil jakości odpowiedzi w pięciu wymiarach ocenianych przez sędziego GPT-4o.
+Szczególnie istotny jest perfekcyjny wynik \textbf{Groundedness (1.000)}. Oznacza to, że system nie generuje halucynacji -- wszystkie odpowiedzi udzielone przez model były w pełni oparte \\na informacjach znalezionych w dostarczonych fragmentach dokumentacji technicznej. Potwierdza to skuteczność zastosowanego mechanizmu nakładania się fragmentów (overlap) w zachowaniu ciągłości kontekstu.
+
+
 
 \begin{figure}[H]
 \centering
@@ -517,44 +581,70 @@ Rysunek~\ref{fig:llm_judge_radar} wizualizuje profil jakości odpowiedzi w pięc
 \label{fig:llm_judge_radar}
 \end{figure}
 
-\subsection{Wyniki według kategorii pytań}
-
-Aby sprawdzić wszechstronność systemu, przeanalizowano wyniki w podziale na trzy kategorie pytań zdefiniowane w datasecie: faktograficzne (Factual), proceduralne (Procedural) i diagnostyczne (Troubleshooting). Wyniki przedstawia Tabela~\ref{tab:category_results}.
+Rysunek~\ref{fig:llm_judge_radar} wizualizuje profil jakości odpowiedzi w pięciu wymiarach ocenianych przez sędziego GPT-4o.
 
 \begin{table}[H]
 \centering
-\caption{Wyniki ewaluacji w podziale na kategorie pytań}
+\caption{Wyniki ewaluacji z podziałem na kategorie pytań}
 \label{tab:category_results}
-\begin{tabular}{|l|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|}
 \hline
-\textbf{Kategoria} & \textbf{ROUGE-1} & \textbf{Semantic Sim.} & \textbf{Liczba pytań} \\
+\textbf{Kategoria} & \textbf{ROUGE-1} & \textbf{Semantic Sim.} & \textbf{LLM Overall} & \textbf{Liczba pytań} \\
 \hline
-Factual & 0.453 & 0.704 & 9 \\
-Procedural & 0.567 & 0.829 & 13 \\
-Troubleshooting & 0.371 & 0.753 & 3 \\
+Factual & 0.453 & 0.704 & 0.961 & 9 \\
+Procedural & 0.567 & 0.829 & 0.935 & 13 \\
+Troubleshooting & 0.371 & 0.753 & 0.883 & 3 \\
 \hline
-\textbf{Średnia} & \textbf{0.503} & \textbf{0.775} & \textbf{25} \\
+\textbf{Średnia} & \textbf{0.503} & \textbf{0.775} & \textbf{0.938} & \textbf{25} \\
 \hline
 \end{tabular}
 \end{table}
 
-Analiza wyników prowadzi do następujących wniosków:
+Należy zauważyć, że klasyfikacja pytań w powyższej tabeli opiera się na decyzjach podjętych przez autonomiczny moduł \textbf{Query Classifier} w trakcie działania systemu, a nie na statycznym podziale ze zbioru danych. 
+
+W trakcie eksperymentu system zaklasyfikował:
 \begin{itemize}
-    \item \textbf{Pytania proceduralne} (instrukcje krok po kroku) są najlepiej obsługiwane przez system (Semantic Similarity = 0.829). Wynika to z faktu, że dokumentacja techniczna zazwyczaj zawiera wyraźnie wydzielone sekcje z instrukcjami, które system łatwo odnajduje.
-    \item \textbf{Pytania faktograficzne} osiągają solidne wyniki, choć nieco niższe w metrykach leksykalnych (ROUGE).
-    \item \textbf{Pytania diagnostyczne} (Troubleshooting) stanowią największe wyzwanie, jednak wysoki wynik podobieństwa semantycznego (0.753) sugeruje, że mimo różnic w słownictwie, system udziela merytorycznie trafnych porad.
+    \item 9 pytań jako \textit{Factual} (wobec 8 w założeniach),
+    \item 13 pytań jako \textit{Procedural} (wobec 9 w założeniach),
+    \item 3 pytania jako \textit{Troubleshooting} (wobec 8 w założeniach).
 \end{itemize}
+
+Przesunięcie to (szczególnie z kategorii \textit{Troubleshooting} do \textit{Procedural}) wynika z faktu, że wiele problemów diagnostycznych w dokumentacji technicznej rozwiązywanych jest poprzez konkretną procedurę (np. "Reset urządzenia"). Model językowy pełniący rolę klasyfikatora słusznie zinterpretował intencję jako prośbę o instrukcję, dobierając odpowiedni prompt proceduralny, co przełożyło się na wysoką jakość odpowiedzi końcowych.
+
+
+\newpage
+\subsection{Analiza wyników względem każdego z 25 pytań testowych}
+
+W celu głębszego zrozumienia działania systemu, przeanalizowano rozkład ocen dla każdego z 25 pytań testowych. Rysunek~\ref{fig:metrics_heatmap} przedstawia mapę ciepła (heatmap) zestawiającą metryki automatyczne z ocenami sędziego LLM.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{images/results/metrics_heatmap.png} 
+\caption{Mapa ciepła (heatmap) przedstawiająca wartości wszystkich metryk dla poszczególnych pytań}
+\label{fig:metrics_heatmap}
+\end{figure}
+
+Analiza wykresu pozwala na sformułowanie kilku obserwacji:
+
+\begin{itemize}
+    \item \textbf{Rozbieżność między ROUGE a oceną merytoryczną:} Na podstawie wykresu tupu \textit{heatmap} można zauważyć, że niskie wyniki metryki ROUGE-1 nie zawsze oznaczają błędną odpowiedź. Przykładem jest pytanie \textbf{Q2}, gdzie ROUGE-1 wynosi 0.00 \\(co sugeruje brak pokrycia słów), podczas gdy LLM Correctness wynosi 1.00. Oznacza to, że system udzielił w pełni poprawnej odpowiedzi, używając jednak innego słownictwa niż w odpowiedzi referencyjnej. Sugeruje to ograniczenia klasycznych metryk n-gramowych w ewaluacji systemów generatywnych.
+    
+    \item \textbf{Wysoka stabilność ugruntowania (Groundedness):} Kolumna \textit{Groundedness} jest w całości wypełniona wartościami 1.00 (ciemna zieleń). Wskazuje to, że niezależnie \\od trudności pytania, system konsekwentnie opierał swoje odpowiedzi na dostarczonym kontekście, unikając halucynacji.
+    
+    \item \textbf{Identyfikacja trudnych przypadków:} Mapa pozwala łatwo zidentyfikować pytania, które sprawiły systemowi trudność, np. \textbf{Q3} czy \textbf{Q21}, gdzie widoczne są spadki \\w metrykach \textit{Completeness} i \textit{Correctness}. Pozwala to na  diagnostykę ewentualnych błędów.
+\end{itemize}
+
 
 \section{Wpływ projektowania promptów na jakość systemu}
 
-W trakcie prac nad systemem zidentyfikowano, że kluczowym czynnikiem wpływającym na jakość odpowiedzi -- obok parametrów technicznych -- jest konstrukcja instrukcji systemowej (system prompt). Przeprowadzono analizę porównawczą dwóch podejść do inżynierii promptów.
+W trakcie prac nad systemem zaobserwowano, że kluczowym czynnikiem wpływającym na jakość odpowiedzi jest konstrukcja instrukcji systemowej (system prompt). Dokonano porównania porównawczą dwóch podejść do inżynierii promptów.
 
-\subsection{Badane warianty promptów}
+\subsection{Porównywane warianty promptów}
 
 \begin{itemize}
     \item \textbf{Prompt restrykcyjny} -- zawierał rygorystyczną instrukcję: \textit{,,jeśli nie znajdziesz odpowiedzi w kontekście lub informacja jest niepełna, odpowiedz: nie mam tej informacji''}. Celem było zminimalizowanie ryzyka halucynacji za wszelką cenę.
     
-    \item \textbf{Prompt elastyczny} (zastosowany w wersji finalnej) -- zawierał instrukcję: \textit{,,odpowiedz na podstawie kontekstu, jeśli kontekst nie zawiera pełnej informacji, podaj co możesz i zaznacz braki''}. To podejście miało na celu maksymalizację użyteczności systemu.
+    \item \textbf{Prompt elastyczny} (zastosowany w wersji finalnej) -- zawierał instrukcję: \textit{,,odpowiedz na podstawie kontekstu, jeśli kontekst nie zawiera pełnej informacji, podaj co możesz \\i zaznacz braki''}. To podejście miało na celu maksymalizację użyteczności systemu.
 \end{itemize}
 
 \subsection{Analiza porównawcza}
@@ -569,10 +659,10 @@ Zmiana podejścia z restrykcyjnego na elastyczne przyniosła znaczącą poprawę
 \hline
 \textbf{Metryka} & \textbf{Prompt restrykcyjny} & \textbf{Prompt elastyczny} & \textbf{Zmiana} \\
 \hline
-ROUGE-1 F1 & 0.393 & 0.506 & +29\% \\
-Semantic Similarity & 0.542 & 0.774 & +43\% \\
-Success Rate & 68\% & 100\% & +32pp \\
-LLM Overall & 0.642 & 0.940 & +46\% \\
+ROUGE-1 F1 & 0.393 & 0.503 & +0.110 \\
+Semantic Similarity & 0.542 & 0.775 & +0.233 \\
+Success Rate & 0.68 & 1.00 & +0.32 \\
+LLM Overall & 0.642 & 0.938 & +0.296 \\
 \hline
 \end{tabular}
 \end{table}
@@ -581,11 +671,11 @@ Najważniejszym skutkiem optymalizacji promptu był wzrost wskaźnika sukcesu (\
 
 Zastosowanie promptu elastycznego pozwoliło na:
 \begin{enumerate}
-    \item \textbf{Wzrost poprawności merytorycznej} (LLM Correctness wzrósł z 63.4\% do 96.4\%) -- model zaczął efektywnie wykorzystywać dostępne fragmenty.
-    \item \textbf{Zachowanie wysokiego ugruntowania} -- wbrew obawom, poluzowanie restrykcji nie spowodowało wzrostu halucynacji (Groundedness wzrosło z 0.880 do 0.920, a w ostatecznej konfiguracji do 1.000).
+    \item \textbf{Wzrost poprawności merytorycznej} (LLM Correctness wzrósł z 63.4\% do 96\%) -- model zaczął efektywnie wykorzystywać dostępne fragmenty.
+    \item \textbf{Zachowanie wysokiego ugruntowania} -- wbrew obawom, poluzowanie restrykcji \\nie spowodowało wzrostu halucynacji (Groundedness wzrosło z 0.880 do 1.000).
 \end{enumerate}
 
-Wyniki te potwierdzają, że inżynieria promptów (prompt engineering) pełni krytyczną rolę w systemach RAG, mając często większy wpływ na końcową percepcję jakości przez użytkownika niż mikro-optymalizacja parametrów wyszukiwania.
+Uzyskane wyniki wskazują, że inżynieria promptów (prompt engineering) pełni bardzo istotną rolę w systemach RAG, mając często większy wpływ na końcową percepcję jakości przez użytkownika niż mikro-optymalizacja parametrów wyszukiwania.
 
 \section{Podsumowanie ewaluacji}
 
@@ -594,7 +684,7 @@ Przeprowadzona ewaluacja wykazała, że zaimplementowany system RAG jest narzęd
 Kluczowe wnioski z badań to:
 \begin{enumerate}
     \item Moduł wyszukiwania skutecznie pozycjonuje trafne fragmenty (MRR = 0.920), co jest fundamentem poprawnego działania całego systemu.
-    \item System osiąga bardzo wysoką jakość generowanych odpowiedzi (LLM Overall > 0.93) i jest w pełni wolny od halucynacji (Groundedness = 1.0).
+    \item System osiąga bardzo wysoką jakość generowanych odpowiedzi (LLM Overall > 0.93) \\i jest w pełni wolny od halucynacji (Groundedness = 1.0).
     \item Odpowiednie dobranie promptu systemowego pozwoliło na osiągnięcie 100\% skuteczności w udzielaniu odpowiedzi na pytania testowe.
     \item System najlepiej radzi sobie z pytaniami proceduralnymi, co czyni go idealnym asystentem do obsługi instrukcji obsługi i manuali technicznych.
 \end{enumerate}

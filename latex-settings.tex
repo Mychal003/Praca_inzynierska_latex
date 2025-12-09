@@ -1,16 +1,16 @@
 %***************************************************************************************************
 
 % Podstawowe ustawienia języka, według którego formatowany będzie dokument
-%\usepackage[english,polish]{babel}
-\usepackage[english]{babel}
+\usepackage[english,polish]{babel}
+%\usepackage[english]{babel}
 
 % Pakiet babel dla polskiego języka powoduje konflikt z pakietem amssymb.
 % Polecenie '\lll' definiują oba pakiety - porządana jest druga definicja.
 \let\lll\undefined
 
 % W przypadku wielojęzykowości ustawia główny język dokumentu
-\selectlanguage{english}
-
+%\selectlanguage{english}
+\selectlanguage{polish}
 % Kodowanie dokumentu
 \usepackage[utf8]{inputenc} 
 \usepackage[T1]{fontenc} 
@@ -141,7 +141,7 @@
 	}
 	\fancyhead[LE]{								% Lewy, parzysty nagłówek
 		\large Rozdział \thechapter \hspace{16pt} \hrulefill 
-		\put(-267,5.5){%
+		\put(-200,5.5){%
 			\makebox(0,0)[l]{%
 				\small Wydział Informatyki i Telekomunikacji
 			}
@@ -158,7 +158,7 @@
 \fancypagestyle{ListofFiguresStyle}{
 	\fancyhf{}									% wyczyść stopki i nagłówki
 	\fancyhead[RO]{								% Prawy, nieparzysty nagłówek
-		\hrulefill \hspace{16pt} \large List of Figures
+		\hrulefill \hspace{16pt} \large Spis rysunków
 		\put(-471.5,5.5){%
 			\makebox(0,0)[l]{%
 				\small Politechnika Wrocławska
@@ -184,7 +184,7 @@
 \fancypagestyle{ListofTablesStyle}{
 	\fancyhf{}									% wyczyść stopki i nagłówki
 	\fancyhead[RO]{								% Prawy, nieparzysty nagłówek
-		\hrulefill \hspace{16pt} \large List of Tables
+		\hrulefill \hspace{16pt} \large Spis tabel
 		\put(-471.5,5.5){%
 			\makebox(0,0)[l]{%
 				\small Politechnika Wrocławska
@@ -237,7 +237,7 @@
 \fancypagestyle{appendixStyle}{
 	\fancyhf{}									% wyczyść stopki i nagłówki
 	\fancyhead[RO]{								% Prawy, nieparzysty nagłówek
-		\hrulefill \hspace{16pt} \large Appendix \thechapter
+		\hrulefill \hspace{16pt} \large Dodatek \thechapter
 		\put(-472.1, 12.1){%
 			\makebox(0,0)[l]{%
 				\includegraphics[width=0.05\textwidth]{resources/pwr-logo}
@@ -558,3 +558,5 @@
      {ż}{{\.z}}1 {Ż}{{\.Z}}1
      {ź}{{\'z}}1 {Ź}{{\'Z}}1
 }
+\usepackage{longtable}
+\usepackage{booktabs}

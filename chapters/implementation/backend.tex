@@ -4,23 +4,14 @@ system autoryzacji, modele bazy danych, pipeline RAG oraz klasyfikator pytań.
 
 \subsection{Struktura projektu}
 
-Struktura katalogów backendu przedstawia się następująco:
+Struktura katalogów backendu została przedstawiona jest na rysunku~\ref{fig:backend_structure}.
 
-\dirtree{%
-.1 backend/.
-.2 app.py.
-.2 config.py.
-.2 models.py.
-.2 auth.py.
-.2 database.db.
-.2 src/.
-.3 rag\_pipeline.py.
-.3 pdf\_processor.py.
-.3 query\_classifier.py.
-.3 conversation\_manager.py.
-.2 vectorstores/.
-.2 uploads/.
-}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.35\textwidth]{images/implementation/backend_dir.png}
+    \caption{Struktura katalogów backendu}
+    \label{fig:backend_structure}
+\end{figure}
 
 Główne pliki aplikacji:
 \begin{itemize}
@@ -36,7 +27,9 @@ Główne pliki aplikacji:
 Serwer Flask udostępnia endpointy REST API podzielone na trzy grupy 
 funkcjonalne. Tabela~\ref{tab:endpoints} przedstawia pełną listę 
 dostępnych endpointów.
-
+Wszystkie endpointy z grup \textit{Konwersacje} oraz \textit{Dokumenty i zapytania} 
+wymagają autoryzacji za pomocą tokenu JWT przekazywanego w nagłówku 
+\texttt{Authorization: Bearer <token>}.
 \begin{table}[H]
 \centering
 \caption{Endpointy API}
@@ -74,9 +67,7 @@ GET & /api/health & Sprawdzenie statusu serwera \\
 \end{tabular}
 \end{table}
 
-Wszystkie endpointy z grup \textit{Konwersacje} oraz \textit{Dokumenty i zapytania} 
-wymagają autoryzacji za pomocą tokenu JWT przekazywanego w nagłówku 
-\texttt{Authorization: Bearer <token>}.
+
 
 \newpage
 \subsection{Modele bazy danych}
@@ -240,6 +231,8 @@ class QueryClassifier:
 W zależności od kategorii pytania wybierany jest odpowiedni szablon 
 promptu zoptymalizowany pod dany typ zapytania. Listing~\ref{lst:query} 
 przedstawia metodę generowania odpowiedzi.
+Odpowiedź wraz z kategorią i źródłami jest zapisywana w bazie danych 
+jako nowa wiadomość w ramach konwersacji.
 
 \begin{lstlisting}[language=Python, caption={Generowanie odpowiedzi}, label={lst:query}]
 def query(self, question: str) -> str:
@@ -263,5 +256,3 @@ def query(self, question: str) -> str:
     return result["result"]
 \end{lstlisting}
 
-Odpowiedź wraz z kategorią i źródłami jest zapisywana w bazie danych 
-jako nowa wiadomość w ramach konwersacji.

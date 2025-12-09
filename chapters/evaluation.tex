@@ -1,0 +1,600 @@
+\chapter{Metryki i ewaluacja systemu}\label{chapter:methodology}
+
+
+Niniejszy rozdział przedstawi użyte metryki oraz wyniki ewaluacji zaimplementowanego systemu RAG. Badania koncentrują się na weryfikacji skuteczności systemu działającego \\w konfiguracji uznanej za optymalną dla obsługiwanej dokumentacji technicznej:
+\begin{itemize}
+    \item \textbf{Rozmiar fragmentu (Chunk size):} 800 znaków
+    \item \textbf{Nakładanie się (Overlap):} 100 znaków
+    \item \textbf{Liczba pobieranych fragmentów (k):} 10
+\end{itemize}
+
+Poniżej opisano przygotowany zbiór danych testowych, zdefiniowano zastosowane metryki dla modułów wyszukiwania (Retrieval) i generacji, a następnie przedstawiono szczegółowe wyniki wydajności systemu oraz analizę wpływu inżynierii promptów na jakość odpowiedzi.
+
+
+\section{Metryki ewaluacji retrieval}\label{sec:retrieval-metrics}
+
+Ewaluacja komponentu wyszukiwania (retrieval) wymaga oceny jakości 
+rankingu zwracanych fragmentów dokumentu. W niniejszej pracy zastosowano 
+następujące metryki.
+
+\subsection{Precision@k}
+
+Precision@k mierzy jaki procent z $k$ najwyżej ocenionych fragmentów 
+jest rzeczywiście istotny dla danego zapytania:
+
+\begin{equation}
+\text{Precision@}k = \frac{|\{d_1, ..., d_k\} \cap R|}{k}
+\end{equation}
+
+gdzie $\{d_1, ..., d_k\}$ to zbiór $k$ zwróconych fragmentów, 
+a $R$ to zbiór wszystkich istotnych fragmentów (ground truth).
+
+Interpretacja: wysoka wartość Precision@k oznacza, że system rzadko 
+zwraca nieistotne fragmenty w top-$k$ wynikach. Wartość 1.0 oznacza, 
+że wszystkie zwrócone fragmenty są istotne.
+
+\subsection{Recall@k}
+
+Recall@k mierzy jaki procent wszystkich istotnych fragmentów został 
+znaleziony w top-$k$ wynikach:
+
+\begin{equation}
+\text{Recall@}k = \frac{|\{d_1, ..., d_k\} \cap R|}{|R|}
+\end{equation}
+
+Interpretacja: wysoka wartość Recall@k oznacza, że system znajduje 
+większość istotnych fragmentów. W kontekście RAG, wysoki recall jest 
+kluczowy, ponieważ brakujące istotne fragmenty mogą prowadzić do 
+niekompletnych odpowiedzi.
+
+\subsection{F1@k}
+
+F1@k to średnia harmoniczna Precision@k i Recall@k, balansująca 
+oba aspekty jakości wyszukiwania:
+
+\begin{equation}
+\text{F1@}k = 2 \cdot \frac{\text{Precision@}k \cdot \text{Recall@}k}{\text{Precision@}k + \text{Recall@}k}
+\end{equation}
+
+Interpretacja: F1@k jest przydatna gdy zależy nam zarówno na precyzji 
+jak i kompletności wyników. Wartość bliska 1.0 oznacza dobry balans 
+między obu metrykami.
+
+\subsection{Mean Reciprocal Rank (MRR)}
+
+MRR mierzy na jakiej pozycji w rankingu znajduje się pierwszy 
+istotny fragment:
+
+\begin{equation}
+\text{MRR} = \frac{1}{\text{rank}_1}
+\end{equation}
+
+gdzie $\text{rank}_1$ to pozycja pierwszego istotnego fragmentu 
+(licząc od 1).
+
+Interpretacja: MRR = 1.0 oznacza, że pierwszy zwrócony fragment 
+jest zawsze istotny. MRR = 0.5 oznacza, że pierwszy istotny fragment 
+jest średnio na drugiej pozycji. Wysoki MRR jest szczególnie ważny 
+w systemach RAG, gdzie pierwszy fragment ma największy wpływ na 
+generowaną odpowiedź.
+
+\subsection{Normalized Discounted Cumulative Gain (NDCG@k)}
+
+NDCG@k uwzględnia zarówno istotność fragmentów jak i ich pozycję 
+w rankingu, przypisując większą wagę fragmentom na wyższych pozycjach:
+
+\begin{equation}
+\text{DCG@}k = \sum_{i=1}^{k} \frac{\text{rel}_i}{\log_2(i+1)}
+\end{equation}
+
+\begin{equation}
+\text{NDCG@}k = \frac{\text{DCG@}k}{\text{IDCG@}k}
+\end{equation}
+
+gdzie $\text{rel}_i$ to istotność fragmentu na pozycji $i$ (0 lub 1), 
+a IDCG@k to idealna wartość DCG (gdy wszystkie istotne fragmenty 
+są na początku rankingu).
+
+Interpretacja: NDCG@k = 1.0 oznacza idealny ranking, gdzie wszystkie 
+istotne fragmenty znajdują się na najwyższych pozycjach. Metryka ta 
+lepiej niż Precision@k oddaje jakość rankingu, ponieważ karze za 
+umieszczanie istotnych fragmentów na niższych pozycjach.
+
+\subsection{Average Precision (AP)}
+
+Average Precision oblicza średnią precyzję po każdym znalezionym 
+istotnym fragmencie:
+
+\begin{equation}
+\text{AP} = \frac{1}{|R|} \sum_{k=1}^{n} \text{Precision@}k \cdot \text{rel}_k
+\end{equation}
+
+gdzie $n$ to całkowita liczba zwróconych fragmentów, a $\text{rel}_k = 1$ 
+jeśli fragment na pozycji $k$ jest istotny.
+
+Interpretacja: AP łączy aspekty precyzji i rankingu, nagradzając 
+systemy które umieszczają istotne fragmenty wysoko w rankingu.
+
+\subsection{Ograniczenia ewaluacji retrieval}
+
+Metryki retrieval (Precision@k, Recall@k, MRR, NDCG) wymagają 
+annotacji istotnych fragmentów dokumentu. Ponieważ annotacje 
+\texttt{relevant\_chunk\_indices} są specyficzne dla konkretnego 
+podziału dokumentu (chunk\_size=800, overlap=100), metryki 
+retrieval obliczono tylko dla konfiguracji bazowej.
+
+Eksperymenty z różnymi wartościami chunk\_size ewaluowano 
+przy użyciu metryk generacji (ROUGE-1 F1, Semantic Similarity), 
+które mierzą jakość końcowej odpowiedzi niezależnie od 
+wewnętrznego podziału dokumentu.
+
+\section{Metryki ewaluacji generacji}\label{sec:generation-metrics}
+
+Ewaluacja jakości generowanych odpowiedzi wymaga porównania z 
+odpowiedziami referencyjnymi (ground truth). Zastosowano metryki 
+leksykalne, semantyczne oraz ocenę przez model językowy.
+
+\subsection{ROUGE-1 F1}
+
+ROUGE (Recall-Oriented Understudy for Gisting Evaluation) mierzy 
+overlap n-gramów między wygenerowaną odpowiedzią a referencją. 
+ROUGE-1 wykorzystuje unigramy (pojedyncze słowa):
+
+\begin{equation}
+\text{ROUGE-1 Precision} = \frac{|\text{unigrams}_{gen} \cap \text{unigrams}_{ref}|}{|\text{unigrams}_{gen}|}
+\end{equation}
+
+\begin{equation}
+\text{ROUGE-1 Recall} = \frac{|\text{unigrams}_{gen} \cap \text{unigrams}_{ref}|}{|\text{unigrams}_{ref}|}
+\end{equation}
+
+\begin{equation}
+\text{ROUGE-1 F1} = 2 \cdot \frac{\text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}
+\end{equation}
+
+Interpretacja: ROUGE-1 F1 mierzy jak dużo słów z odpowiedzi 
+referencyjnej pojawia się w wygenerowanej odpowiedzi i odwrotnie. 
+Wartości powyżej 0.5 wskazują na znaczący overlap słownictwa. 
+Ograniczeniem metryki jest brak uwzględnienia synonimów i parafraz.
+
+\subsection{Semantic Similarity}
+
+Podobieństwo semantyczne wykorzystuje embeddingi tekstowe do 
+porównania znaczenia odpowiedzi, niezależnie od użytych słów:
+
+\begin{equation}
+\text{Semantic Similarity} = \cos(\mathbf{e}_{gen}, \mathbf{e}_{ref}) = \frac{\mathbf{e}_{gen} \cdot \mathbf{e}_{ref}}{||\mathbf{e}_{gen}|| \cdot ||\mathbf{e}_{ref}||}
+\end{equation}
+
+gdzie $\mathbf{e}_{gen}$ i $\mathbf{e}_{ref}$ to wektory embeddingów 
+wygenerowanej odpowiedzi i referencji, utworzone przy użyciu modelu 
+Sentence-BERT (all-mpnet-base-v2).
+
+Interpretacja: wartość 1.0 oznacza identyczne znaczenie semantyczne, 
+0.0 oznacza brak podobieństwa. W praktyce wartości powyżej 0.7 
+wskazują na wysokie podobieństwo semantyczne. Metryka ta lepiej 
+niż ROUGE radzi sobie z parafrazami i synonimami.
+
+\subsection{Token Overlap}
+
+Token Overlap to prostsza metryka mierząca procent wspólnych słów:
+
+\begin{equation}
+\text{Token Overlap} = \frac{|\text{tokens}_{gen} \cap \text{tokens}_{ref}|}{|\text{tokens}_{ref}|}
+\end{equation}
+
+Interpretacja: metryka pomocnicza, przydatna do szybkiej oceny 
+pokrycia słownictwa.
+
+
+\section{LLM-as-a-Judge}\label{sec:llm-judge}
+
+Tradycyjne metryki leksykalne i semantyczne mają ograniczenia w ocenie 
+jakości odpowiedzi. Dlatego zastosowano podejście LLM-as-a-Judge, 
+gdzie model GPT-4o ocenia odpowiedzi w pięciu wymiarach.
+
+\subsection{Wymiary oceny}
+
+\begin{enumerate}
+    \item \textbf{Correctness} (poprawność merytoryczna) -- czy odpowiedź 
+    zawiera prawidłowe informacje zgodne z referencją? Ocena od 0.0 
+    (całkowicie błędna) do 1.0 (w pełni poprawna).
+    
+    \item \textbf{Completeness} (kompletność) -- czy odpowiedź zawiera 
+    wszystkie kluczowe informacje z referencji? Ocena od 0.0 (brak 
+    istotnych informacji) do 1.0 (wszystkie informacje obecne).
+    
+    \item \textbf{Relevance} (istotność) -- czy odpowiedź bezpośrednio 
+    odnosi się do zadanego pytania? Ocena od 0.0 (całkowicie nieistotna) 
+    do 1.0 (w pełni istotna).
+    
+    \item \textbf{Groundedness} (ugruntowanie) -- czy odpowiedź opiera się 
+    na dostarczonym kontekście, czy zawiera halucynacje? Ocena od 0.0 
+    (znaczące halucynacje) do 1.0 (wszystkie fakty \\z kontekstu).
+    
+    \item \textbf{Overall} (ocena ogólna) -- całościowa ocena jakości 
+    odpowiedzi uwzględniająca wszystkie aspekty.
+\end{enumerate}
+
+\subsection{Implementacja}
+
+Dla każdego wymiaru model GPT-4o otrzymuje prompt z pytaniem, 
+odpowiedzią referencyjną, wygenerowaną odpowiedzią oraz (dla 
+groundedness) kontekstem. Model zwraca pojedynczą wartość liczbową z zakresu [0.0, 1.0].
+
+\subsection{Zalety i ograniczenia}
+
+LLM-as-a-Judge oferuje kilka zalet w porównaniu do metryk automatycznych:
+\begin{itemize}
+    \item Rozumie parafrazowanie i różne sposoby wyrażenia tej samej informacji
+    \item Ocenia faktyczną poprawność, nie tylko podobieństwo leksykalne
+    \item Może wykryć halucynacje i błędy merytoryczne
+\end{itemize}
+
+Ograniczenia metody obejmują:
+\begin{itemize}
+    \item Wyższy koszt (każda ocena wymaga wywołania API)
+    \item Potencjalna niestabilność ocen (różne wywołania mogą dawać 
+    nieznacznie różne wyniki)
+    \item Możliwe biasy modelu oceniającego
+\end{itemize}
+
+
+\section{Dataset ewaluacyjny}\label{sec:dataset}
+W celu przeprowadzenia ewaluacji zaimplementowanego systemu RAG, przygotowano zbiór danych testowych. Dataset ten został zaprojektowany tak, aby odzwierciedlał rzeczywiste scenariusze użycia asystenta technicznego. Poniżej omówiono strukturę dokumentu źródłowego, przyjętą reprezentacje pytań testowych, oraz metodologię tworzenia wzorcowych odpowiedzi (Ground Truth).
+\subsection{Dokument źródłowy}
+
+Do ewaluacji wykorzystano dokumentację techniczną routera TP-Link 
+Archer D7 (User Guide, 119 stron). Wybór tego dokumentu podyktowany 
+był kilkoma czynnikami:
+\begin{itemize}
+    \item Reprezentatywność dla dokumentacji technicznej
+    \item Zróżnicowana zawartość (specyfikacje, instrukcje, rozwiązywanie problemów)
+    \item Dostępność publiczna
+    \item Odpowiednia długość do testowania systemu RAG
+\end{itemize}
+
+\newpage
+\subsection{Pytania testowe}
+
+Przygotowano 25 pytań testowych podzielonych na trzy kategorie:
+
+\begin{table}[h]
+\centering
+\caption{Kategorie pytań w datasecie ewaluacyjnym}
+\label{tab:question-categories}
+\begin{tabular}{|l|c|p{7cm}|}
+\hline
+\textbf{Kategoria} & \textbf{Liczba} & \textbf{Charakterystyka} \\
+\hline
+Factual & 8 & Pytania o konkretne fakty (np. domyślny adres IP, 
+dane techniczne) \\
+\hline
+Procedural & 9 & Pytania o procedury i instrukcje (np. jak wykonać 
+reset fabryczny) \\
+\hline
+Troubleshooting & 8 & Pytania o rozwiązywanie problemów (np. co zrobić 
+gdy nie działa WiFi) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Ground truth}
+
+Dla każdego pytania przygotowano:
+\begin{itemize}
+    \item \textbf{Expected answer} -- odpowiedź referencyjna wyekstrahowana 
+    bezpośrednio z dokumentu przez model GPT-4o z instrukcją zachowania 
+    oryginalnego sformułowania
+    \item \textbf{Relevant chunk indices} -- lista indeksów fragmentów 
+    dokumentu zawierających informacje potrzebne do odpowiedzi, 
+    annotowana przez model GPT-4o
+\end{itemize}
+
+Proces przygotowania datasetu był półautomatyczny: model językowy 
+ekstrahował odpowiedzi i annotował istotne fragmenty, a następnie 
+wyniki były weryfikowane pod kątem poprawności.
+\iffalse
+\section{Plan eksperymentów}\label{sec:experiment-plan}
+
+\subsection{Badane parametry}
+
+Przeprowadzono eksperymenty badające wpływ trzech kluczowych 
+parametrów systemu RAG:
+
+\begin{enumerate}
+    \item \textbf{Chunk size} (rozmiar fragmentu) -- liczba znaków 
+    w pojedynczym fragmencie dokumentu. Testowane wartości: 
+    300, 500, 800, 1200, 1500 znaków.
+    
+    \item \textbf{k} (liczba fragmentów) -- ile fragmentów jest 
+    pobieranych z bazy wektorowej i przekazywanych do modelu. 
+    Testowane wartości: 1, 3, 5, 7, 10.
+    
+    \item \textbf{Overlap} (nakładanie) -- liczba znaków wspólnych 
+    między sąsiednimi fragmentami. Testowane wartości: 0, 50, 100, 
+    200, 300 znaków.
+\end{enumerate}
+
+
+
+\subsection{Metodyka eksperymentów}
+
+Każdy eksperyment przebiegał według przedstawionego poniżej schematu:
+\begin{enumerate}
+    \item Utworzenie pipeline RAG z zadanymi parametrami
+    \item Przetworzenie dokumentu (chunking, embeddingi, indeksowanie)
+    \item Dla każdego pytania z datasetu:
+    \begin{enumerate}
+        \item Wygenerowanie odpowiedzi przez system
+        \item Obliczenie metryk ROUGE-1 F1 i Semantic Similarity
+        \item Zmierzenie czasu odpowiedzi (latencja)
+    \end{enumerate}
+    \item Agregacja wyników
+\end{enumerate}
+
+
+\subsection{Konfiguracja bazowa}
+
+Wszystkie eksperymenty wykorzystywały następującą konfigurację bazową:
+\begin{itemize}
+    \item Model embeddingów: OpenAI text-embedding-3-large
+    \item Baza wektorowa: FAISS (Facebook AI Similarity Search)
+    \item Model generacji: GPT-4o (temperature=0)
+    \item Metryka podobieństwa: cosine similarity
+\end{itemize}
+\fi
+\iffalse
+\section{Proces ewaluacji}\label{sec:evaluation-pipeline}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{chapters/evaluation_process_simple.png}
+\caption{Pipeline ewaluacji systemu RAG}
+\label{fig:evaluation-pipeline}
+\end{figure}
+\fi
+\subsection{Przygotowanie datasetu}
+
+Skrypt  przetwarza dokument PDF oraz generuje 
+dataset ewaluacyjny:
+\begin{enumerate}
+    \item Dokument jest dzielony na fragmenty z konfiguracją bazową
+    \item Dla każdego pytania model GPT-4o ekstrahuje odpowiedź z dokumentu
+    \item Model annotuje które fragmenty są istotne dla pytania
+    \item Wyniki zapisywane są w formacie JSON
+\end{enumerate}
+
+
+
+\section{Ewaluacja retrieval}
+
+Niniejsza sekcja przedstawia wyniki ewaluacji modułu wyszukiwania (retrieval), który odpowiada za wybór użytecznych fragmentów dokumentacji najbardziej zbliżonych semantycznie do zapytania użytkownika. Analizę przeprowadzono dla przyjętej konfiguracji systemu, wykorzystującej podział na fragmenty o długości 800 znaków z nakładaniem się (overlap) 100 znaków. W procesie tym zastosowano model embeddingów \texttt{text-embedding-3-large} oraz indeks wektorowy FAISS. Celem ewaluacji jest ocena skuteczności modułu wyszukiwania.
+
+\newpage
+\subsection{Precision i Recall}
+
+Rysunek~\ref{fig:precision_recall} przedstawia porównanie metryk 
+Precision i Recall dla różnych wartości k (liczby pobieranych fragmentów).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/results/retrieval_precision_recall.png}
+\caption{Porównanie Precision i Recall dla różnych wartości k}
+\label{fig:precision_recall}
+\end{figure}
+
+Wraz ze wzrostem k obserwujemy spadek Precision (pobieramy więcej 
+fragmentów, \\w tym mniej trafnych) oraz wzrost Recall (znajdujemy więcej 
+trafnych fragmentów). Jest to klasyczny kompromis w systemach 
+wyszukiwania informacji (information retrieval trade-off).
+
+\subsection{Podsumowanie metryk wyszukiwania}
+
+Tabela~\ref{tab:retrieval_results} przedstawia szczegółowe wyniki 
+dla różnych wartości k.
+
+\begin{table}[H]
+\centering
+\caption{Wyniki ewaluacji wyszukiwania}
+\label{tab:retrieval_results}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Metryka} & \textbf{k=1} & \textbf{k=3} & \textbf{k=5} & \textbf{k=10} \\
+\hline
+Precision@k & 0.880 & 0.733 & 0.624 & 0.468 \\
+Recall@k & 0.168 & 0.366 & 0.485 & 0.687 \\
+F1@k & 0.268 & 0.449 & 0.500 & 0.508 \\
+NDCG@k & 0.880 & 0.785 & 0.739 & 0.744 \\
+\hline
+MRR & \multicolumn{4}{c|}{0.920} \\
+\hline
+\end{tabular}
+\end{table}
+\newpage
+\subsection{Jakość rankingu (NDCG)}
+
+Rysunek~\ref{fig:ndcg} przedstawia jak zmienia się metryka NDCG 
+(Normalized Discounted Cumulative Gain) wraz ze wzrostem k.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/results/retrieval_ndcg.png}
+\caption{Zmiana NDCG w zależności od liczby pobieranych fragmentów}
+\label{fig:ndcg}
+\end{figure}
+
+NDCG mierzy jakość rankingu -- czy trafne fragmenty znajdują się 
+na wysokich pozycjach. Wysoka wartość NDCG@1 = 0.880 oznacza, 
+że pierwszy pobrany fragment jest zwykle trafny. Warto zauważyć, 
+że NDCG nieznacznie rośnie między k=5 (0.739) a k=10 (0.744), 
+co sugeruje, że dodatkowe fragmenty na dalszych pozycjach 
+również zawierają istotne informacje.
+\newpage
+\subsection{Analiza wyników wyszukiwania}
+
+Uzyskane wyniki wskazują na wysoką jakość modułu wyszukiwania:
+
+\begin{itemize}
+    \item \textbf{MRR = 0.920} -- średnia odwrotność pozycji pierwszego 
+    trafnego fragmentu. Wysoka wartość oznacza, że trafny fragment 
+    pojawia się zwykle na pierwszej lub drugiej pozycji rankingu. 
+    Jest to bardzo dobry wynik, który pokazuje skuteczność 
+    wyszukiwania semantycznego.
+    
+    \item \textbf{Precision@5 = 0.624} -- około 3 z 5 pobranych 
+    fragmentów jest trafnych. System skutecznie identyfikuje 
+    istotne fragmenty dokumentu.
+    
+    \item \textbf{Recall@5 = 0.485} -- system znajduje około 
+    połowę wszystkich trafnych fragmentów. Wartość ta wynika z faktu, 
+    że niektóre pytania mają wiele trafnych fragmentów rozproszonych 
+    w różnych częściach dokumentu.
+    
+    \item \textbf{F1@5 = 0.500} -- zbalansowana miara łącząca 
+    Precision i Recall, wskazująca na dobry kompromis między 
+    precyzją a pokryciem.
+    
+    \item \textbf{Precision@1 = 0.880} -- w 88\% przypadków 
+    pierwszy pobrany fragment jest trafny, co jest kluczowe 
+    dla jakości odpowiedzi RAG.
+\end{itemize}
+
+Wysoka wartość MRR oraz Precision@1 są kluczowe dla systemu RAG, 
+ponieważ oznaczają, że najważniejsze informacje trafiają na początek 
+kontekstu przekazywanego do modelu językowego. Dzięki temu model 
+ma dostęp do najbardziej istotnych merytorycznie fragmentów już na początku 
+promptu.
+\newpage
+
+
+
+
+
+
+\section{Wyniki ewaluacji generacji (End-to-End)}
+
+
+Po zweryfikowaniu skuteczności modułu wyszukiwania, przeprowadzono ewaluację całego systemu RAG (Retrieval-Augmented Generation). Do testów wykorzystano konfigurację, która w toku prac implementacyjnych wykazała najlepszy balans między jakością a wydajnością: podział dokumentu na fragmenty o długości 800 znaków z nakładaniem się (overlap) 100 znaków, przy pobieraniu 10 najbardziej pasujących fragmentów ($k=10$).
+
+\subsection{Ogólna jakość odpowiedzi}
+
+Tabela~\ref{tab:final_results} przedstawia końcowe wyniki systemu zmierzone za pomocą metryk automatycznych oraz oceny sędziowskiej LLM.
+
+\begin{table}[H]
+\centering
+\caption{Końcowe wyniki systemu RAG (konfiguracja 800/10/100)}
+\label{tab:final_results}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Metryka} & \textbf{Wartość} \\
+\hline
+ROUGE-1 F1 & 0.503 \\
+Semantic Similarity & 0.775 \\
+Latencja średnia & 3.20s \\
+\hline
+LLM Correctness & 0.960 \\
+LLM Completeness & 0.924 \\
+LLM Relevance & 0.928 \\
+LLM Groundedness & 1.000 \\
+LLM Overall & 0.938 \\
+\hline
+Success Rate & 100\% \\
+\hline
+\end{tabular}
+\end{table}
+
+System osiąga bardzo wysokie wyniki we wszystkich wymiarach oceny LLM Judge, \\z ogólną oceną jakości (Overall) na poziomie 0.938 (w skali 0-1). 
+
+Szczególnie istotny jest perfekcyjny wynik \textbf{Groundedness (1.000)}. Oznacza to, że system nie generuje halucynacji -- wszystkie odpowiedzi udzielone przez model były w pełni oparte na informacjach znalezionych w dostarczonych fragmentach dokumentacji technicznej. Potwierdza to skuteczność zastosowanego mechanizmu nakładania się fragmentów (overlap) w zachowaniu ciągłości kontekstu.
+\newpage
+Rysunek~\ref{fig:llm_judge_radar} wizualizuje profil jakości odpowiedzi w pięciu wymiarach ocenianych przez sędziego GPT-4o.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{images/results/llm_judge_radar.png}
+\caption{Profil jakości odpowiedzi według oceny LLM Judge }
+\label{fig:llm_judge_radar}
+\end{figure}
+
+\subsection{Wyniki według kategorii pytań}
+
+Aby sprawdzić wszechstronność systemu, przeanalizowano wyniki w podziale na trzy kategorie pytań zdefiniowane w datasecie: faktograficzne (Factual), proceduralne (Procedural) i diagnostyczne (Troubleshooting). Wyniki przedstawia Tabela~\ref{tab:category_results}.
+
+\begin{table}[H]
+\centering
+\caption{Wyniki ewaluacji w podziale na kategorie pytań}
+\label{tab:category_results}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Kategoria} & \textbf{ROUGE-1} & \textbf{Semantic Sim.} & \textbf{Liczba pytań} \\
+\hline
+Factual & 0.453 & 0.704 & 9 \\
+Procedural & 0.567 & 0.829 & 13 \\
+Troubleshooting & 0.371 & 0.753 & 3 \\
+\hline
+\textbf{Średnia} & \textbf{0.503} & \textbf{0.775} & \textbf{25} \\
+\hline
+\end{tabular}
+\end{table}
+
+Analiza wyników prowadzi do następujących wniosków:
+\begin{itemize}
+    \item \textbf{Pytania proceduralne} (instrukcje krok po kroku) są najlepiej obsługiwane przez system (Semantic Similarity = 0.829). Wynika to z faktu, że dokumentacja techniczna zazwyczaj zawiera wyraźnie wydzielone sekcje z instrukcjami, które system łatwo odnajduje.
+    \item \textbf{Pytania faktograficzne} osiągają solidne wyniki, choć nieco niższe w metrykach leksykalnych (ROUGE).
+    \item \textbf{Pytania diagnostyczne} (Troubleshooting) stanowią największe wyzwanie, jednak wysoki wynik podobieństwa semantycznego (0.753) sugeruje, że mimo różnic w słownictwie, system udziela merytorycznie trafnych porad.
+\end{itemize}
+
+\section{Wpływ projektowania promptów na jakość systemu}
+
+W trakcie prac nad systemem zidentyfikowano, że kluczowym czynnikiem wpływającym na jakość odpowiedzi -- obok parametrów technicznych -- jest konstrukcja instrukcji systemowej (system prompt). Przeprowadzono analizę porównawczą dwóch podejść do inżynierii promptów.
+
+\subsection{Badane warianty promptów}
+
+\begin{itemize}
+    \item \textbf{Prompt restrykcyjny} -- zawierał rygorystyczną instrukcję: \textit{,,jeśli nie znajdziesz odpowiedzi w kontekście lub informacja jest niepełna, odpowiedz: nie mam tej informacji''}. Celem było zminimalizowanie ryzyka halucynacji za wszelką cenę.
+    
+    \item \textbf{Prompt elastyczny} (zastosowany w wersji finalnej) -- zawierał instrukcję: \textit{,,odpowiedz na podstawie kontekstu, jeśli kontekst nie zawiera pełnej informacji, podaj co możesz i zaznacz braki''}. To podejście miało na celu maksymalizację użyteczności systemu.
+\end{itemize}
+
+\subsection{Analiza porównawcza}
+
+Zmiana podejścia z restrykcyjnego na elastyczne przyniosła znaczącą poprawę w kluczowych metrykach wydajności systemu (Tabela~\ref{tab:prompt_comparison}).
+
+\begin{table}[h]
+\centering
+\caption{Wpływ konstrukcji promptu na wyniki systemu}
+\label{tab:prompt_comparison}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Metryka} & \textbf{Prompt restrykcyjny} & \textbf{Prompt elastyczny} & \textbf{Zmiana} \\
+\hline
+ROUGE-1 F1 & 0.393 & 0.506 & +29\% \\
+Semantic Similarity & 0.542 & 0.774 & +43\% \\
+Success Rate & 68\% & 100\% & +32pp \\
+LLM Overall & 0.642 & 0.940 & +46\% \\
+\hline
+\end{tabular}
+\end{table}
+
+Najważniejszym skutkiem optymalizacji promptu był wzrost wskaźnika sukcesu (\textbf{Success Rate}) z 68\% do 100\%. Przy prompcie restrykcyjnym model zbyt ostrożnie interpretował braki w kontekście, często odmawiając odpowiedzi na pytania, na które informacje w rzeczywistości znajdowały się w dokumencie.
+
+Zastosowanie promptu elastycznego pozwoliło na:
+\begin{enumerate}
+    \item \textbf{Wzrost poprawności merytorycznej} (LLM Correctness wzrósł z 63.4\% do 96.4\%) -- model zaczął efektywnie wykorzystywać dostępne fragmenty.
+    \item \textbf{Zachowanie wysokiego ugruntowania} -- wbrew obawom, poluzowanie restrykcji nie spowodowało wzrostu halucynacji (Groundedness wzrosło z 0.880 do 0.920, a w ostatecznej konfiguracji do 1.000).
+\end{enumerate}
+
+Wyniki te potwierdzają, że inżynieria promptów (prompt engineering) pełni krytyczną rolę w systemach RAG, mając często większy wpływ na końcową percepcję jakości przez użytkownika niż mikro-optymalizacja parametrów wyszukiwania.
+
+\section{Podsumowanie ewaluacji}
+
+Przeprowadzona ewaluacja wykazała, że zaimplementowany system RAG jest narzędziem skutecznym i precyzyjnym w obsłudze dokumentacji technicznej. 
+
+Kluczowe wnioski z badań to:
+\begin{enumerate}
+    \item Moduł wyszukiwania skutecznie pozycjonuje trafne fragmenty (MRR = 0.920), co jest fundamentem poprawnego działania całego systemu.
+    \item System osiąga bardzo wysoką jakość generowanych odpowiedzi (LLM Overall > 0.93) i jest w pełni wolny od halucynacji (Groundedness = 1.0).
+    \item Odpowiednie dobranie promptu systemowego pozwoliło na osiągnięcie 100\% skuteczności w udzielaniu odpowiedzi na pytania testowe.
+    \item System najlepiej radzi sobie z pytaniami proceduralnymi, co czyni go idealnym asystentem do obsługi instrukcji obsługi i manuali technicznych.
+\end{enumerate}

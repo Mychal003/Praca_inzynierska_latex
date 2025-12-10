@@ -43,7 +43,7 @@ akceptującym zarówno tekst, jak i obrazy na wejściu. Wprowadził on znaczące
 ulepszenia w zakresie zdolności rozumowania, osiągając wyniki na poziomie 
 ludzkim w wielu profesjonalnych egzaminach akademickich.
 
-Pomimo tych osiągnięć, modele LLM posiadają istotne ograniczenia, które dla skuteczności i celowości pożądanych rozwiązań muszą być wyeliminowane. Architektura RAG staje się tym samym kluczowym narzedziem do korygowania i przezwyciężania istotnych ograniczeń modeli LLM.
+Pomimo tych osiągnięć, modele LLM posiadają istotne ograniczenia, które dla skuteczności i celowości pożądanych rozwiązań muszą być wyeliminowane. Architektura RAG staje się tym samym kluczowym narzędziem do korygowania i przezwyciężania istotnych ograniczeń modeli LLM.
 \begin{itemize}
     \item \textbf{Nieaktualna wiedza (\textit{knowledge cutoff})} -- wiedza modeli 
     jest zamrożona w momencie zakończenia treningu (np. wrzesień 2021 dla 
@@ -87,7 +87,7 @@ nad klasycznymi modelami LLM:
     wyniki \\w zadaniach wymagających dostępu do szczegółowych faktów (knowledge-intensive tasks) 
     niż znacznie większe modele parametryczne~\cite{lewis2020retrieval}.
 \end{itemize}
-
+\newpage
 Wraz z rozwojem technologii, architektura ta ewoluowała. Gao i zespół~\cite{gao2023retrieval} 
 w swoim przeglądzie z 2023 roku klasyfikują systemy RAG na trzy generacje:
 
@@ -130,11 +130,12 @@ słów (rozwiązanie problemu luki leksykalnej).
 
 Kluczowym pojęciem są tutaj \textbf{embeddingi} (reprezentacje wektorowe) -- 
 gęste wektory liczb rzeczywistych, które mapują tekst do n-wymiarowej przestrzeni 
-w taki sposób, \\aby teksty o podobnym znaczeniu znajdowały się blisko siebie. 
+w taki sposób, \\aby teksty o podobnym znaczeniu znajdowały się blisko siebie.
+
 Ewolucję modeli tworzących te reprezentacje można podzielić na trzy etapy:
 
 \begin{enumerate}
-    \item \textbf{Embeddingi statyczne} -- Prekursorskie metody takie jak 
+    \item \textbf{Embeddingi statyczne} -- Wczesne metody takie jak 
     Word2Vec~\cite{mikolov2013word2vec} czy GloVe~\cite{pennington2014glove}. 
     Generowały one jeden, stały wektor dla każdego słowa w słowniku, niezależnie 
     od kontekstu (np. słowo "zamek" miało taką samą reprezentację w kontekście 

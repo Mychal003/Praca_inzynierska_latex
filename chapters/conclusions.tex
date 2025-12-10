@@ -1,4 +1,59 @@
-\Chapter{Podsumowanie i kierunki dalszych prac}\label{chapter:conclusions}
-Zakończenie, podsumowuje najważniejsze wnioski, podaje możliwości dalszego rozwinięcia wykonanych prac i wskazuje obszar potencjalnego zastosowania pracy. Rezultaty pracy mają charakter poznawczy, mogą mieć charakter użytkowy. Należy dokonać analizy uzyskanych wyników. Rezultaty powinny charakteryzować się oryginalnością, a nawet w pewnym stopniu nowatorstwem. Praca zawiera (\dots). Zostało pokazane (\dots). Eksperymenty wykazały (\dots). Tu piszemy wnioski i obserwacje.
+\chapter{Podsumowanie i kierunki dalszych prac}
+\label{chapter:conclusions}
 
-Widzimy, że (\dots). Z tego powodu przyszła praca powinna obejmować (\dots). 
+Niniejsza praca inżynierska przedstawiła projekt, implementację oraz ewaluację systemu wspomagania użytkownika opartego na architekturze RAG (Retrieval-Augmented Generation), przeznaczonego do analizy dokumentacji technicznej. W tym rozdziale podsumowano osiągnięte rezultaty, sformułowano wnioski płynące z przeprowadzonych badań oraz wskazano kierunki dalszego rozwoju systemu.
+
+\section{Realizacja celów pracy}
+
+Wszystkie cele szczegółowe określone w rozdziale \ref{chapter:introduction} zostały zrealizowane:
+
+\begin{enumerate}
+    \item \textbf{Implementacja systemu RAG} -- stworzono kompletny, działający system obejmujący przetwarzanie dokumentów PDF, tworzenie embeddingów za pomocą modelu \texttt{text-embedding-3-large}, bazę wektorową FAISS oraz generowanie odpowiedzi z wykorzystaniem modelu GPT-4o. System wyposażono w interfejs webowy umożliwiający przesyłanie dokumentów, zadawanie pytań oraz przeglądanie historii konwersacji.
+    
+    \item \textbf{Opracowanie metodologii ewaluacji} -- przygotowano zestaw narzędzi do kompleksowej oceny jakości systemu, obejmujący metryki wyszukiwania (Precision, Recall, MRR, NDCG), metryki generacji tekstu (ROUGE, Semantic Similarity) oraz ocenę przez model językowy (LLM Judge).
+    
+    \item \textbf{Przeprowadzenie ewaluacji} -- zweryfikowano działanie systemu na zbiorze 25 pytań testowych z trzech kategorii (faktograficzne, proceduralne, diagnostyczne), wykorzystując dokumentację routera TP-Link Archer D7.
+    
+    \item \textbf{Optymalizacja promptów} -- zaprojektowano i przetestowano różne warianty instrukcji systemowych, co pozwoliło na znaczącą poprawę jakości odpowiedzi.
+    
+    \item \textbf{Analiza wyników} -- przeprowadzono adekwatną do projektu analizę skuteczności systemu z wykorzystaniem przyjętych metryk.
+\end{enumerate}
+\newpage
+\section{Główne wnioski}
+
+Przeprowadzone eksperymenty pozwoliły na sformułowanie następujących wniosków:
+
+\textbf{Skuteczność modułu wyszukiwania.} System osiągnął wysoką jakość wyszukiwania semantycznego, czego dowodem jest wartość MRR = 0.920 oraz Precision@1 = 0.880. Oznacza to, że w zdecydowanej większości przypadków pierwszy zwrócony fragment dokumentu zawierał informacje potrzebne do udzielenia odpowiedzi, co jest kluczowe dla działania systemu RAG.
+
+\textbf{Wysoka jakość generowanych odpowiedzi.} Zoptymalizowany system osiągnął ogólną ocenę jakości na poziomie 93.8\% według oceny LLM Judge, przy zachowaniu 100\% skuteczności w udzielaniu odpowiedzi (Success Rate). Szczególnie istotny jest perfekcyjny wynik w wymiarze Groundedness (1.000), co oznacza, że system nie generował halucynacji.
+
+\textbf{Kluczowa rola inżynierii promptów.} Jednym z najważniejszych wniosków płynących z pracy jest obserwacja, że odpowiednie projektowanie promptów (prompt engineering) ma znacznie większy wpływ na końcową jakość systemu, niż początkowo zakładano
+\textbf{Ograniczenia metryk leksykalnych.} Analiza wyników sugeruje rozbieżność między metrykami leksykalnymi (ROUGE) a oceną merytoryczną (LLM Judge). W niektórych przypadkach system udzielał w pełni poprawnych odpowiedzi, które otrzymywały niskie wyniki ROUGE ze względu na użycie innego słownictwa niż w odpowiedzi referencyjnej.
+\section{Kierunki dalszych prac}
+
+Zrealizowany system stanowi funkcjonalne rozwiązanie, które może być rozwijane w następujących kierunkach:
+
+\textbf{Obsługa różnorodnych formatów dokumentów.} Obecna implementacja obsługuje wyłącznie pliki PDF. Kolejnym rozszerzeniem byłoby dodanie wsparcia dla innych często spotykanych formatów, takich jak dokumenty Word (.docx), pliki HTML oraz strony internetowe. Umożliwiłoby to zastosowanie systemu w szerszym zakresie scenariuszy, np. dokumentów firmowych przechowywanych w różnych formatach.
+
+\textbf{Wyszukiwanie hybrydowe.} Zastosowane w pracy wyszukiwanie semantyczne dobrze radzi sobie z pytaniami sformułowanymi w języku naturalnym. Implementacja wyszukiwania hybrydowego, łączącego podejście semantyczne z klasycznym wyszukiwaniem słów kluczowych (np. algorytm BM25), mogłaby poprawić skuteczność systemu w przypadku zapytań zawierających specyficzne identyfikatory lub nazwy własne.
+
+\textbf{Wsparcie dla lokalnych modeli językowych.} Obecna implementacja zakłada modele OpenAI dostępne przez API, co wymaga przesłanie treści dokumentów oraz zapytań na zewnętrzne serwery. W przypadku dokumentów zawierających często informacje poufne może to stanowić pewne ograniczenie. Rozwiązaniem było by wsparcie dla lokalnych modeli językowych. Uruchomienie modelu na włąsnej infrastrukturze eliminowały by ryzyko wycieku danych.
+
+\textbf{Rozszerzenie ewaluacji.} Przeprowadzona ewaluacja opierała się na jednym dokumencie i zbiorze 25 pytań testowych. W przyszłych pracach warto rozszerzyć eksperymenty o większą liczbę dokumentów z różnych dziedzin (np. dokumentacja oprogramowania, instrukcje medyczne, regulaminy prawne) oraz zwiększyć liczbę pytań testowych.
+
+
+
+
+\section{Potencjalne zastosowania}
+
+Opracowany system może znaleźć praktyczne zastosowanie w następujących obszarach:
+
+\begin{itemize}
+    \item \textbf{Obsługa klienta} -- automatyczne odpowiadanie na pytania użytkowników dotyczące produktów na podstawie ich dokumentacji technicznej.
+    \item \textbf{Wewnętrzne systemy firmowe} -- wspomaganie pracowników w wyszukiwaniu informacji w rozbudowanej dokumentacji wewnętrznej.
+    \item \textbf{Edukacja} -- tworzenie interaktywnych asystentów do materiałów dydaktycznych i podręczników.
+\end{itemize}
+
+\section{Podsumowanie}
+
+Zrealizowana praca inżynierska pokazał, że architektura RAG stanowi skuteczne rozwiązanie problemu automatycznego odpowiadania na pytania użytkowników na podstawie dokumentacji technicznej. System osiągnął wysoką jakość odpowiedzi przy jednoczesnym zachowaniu pełnego ugruntowania w materiale źródłowym. Przeprowadzone eksperymenty sugerują  kluczową rolę inżynierii promptów w osiąganiu optymalnych rezultatów, co stanowi istotną wskazówkę praktyczną dla twórców podobnych systemów.

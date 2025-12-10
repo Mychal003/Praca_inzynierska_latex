@@ -4,7 +4,7 @@ system autoryzacji, modele bazy danych, pipeline RAG oraz klasyfikator pytań.
 
 \subsection{Struktura projektu}
 
-Struktura katalogów backendu została przedstawiona jest na rysunku~\ref{fig:backend_structure}.
+
 
 \begin{figure}[h!]
     \centering
@@ -12,7 +12,7 @@ Struktura katalogów backendu została przedstawiona jest na rysunku~\ref{fig:ba
     \caption{Struktura katalogów backendu}
     \label{fig:backend_structure}
 \end{figure}
-
+Struktura katalogów backendu została przedstawiona jest na rysunku~\ref{fig:backend_structure}.
 Główne pliki aplikacji:
 \begin{itemize}
     \item \texttt{app.py} -- główny plik serwera Flask z endpointami API
@@ -25,10 +25,7 @@ Główne pliki aplikacji:
 \subsection{API HTTP}
 
 Serwer Flask udostępnia endpointy REST API podzielone na trzy grupy 
-funkcjonalne. Tabela~\ref{tab:endpoints} przedstawia pełną listę 
-dostępnych endpointów.
-Wszystkie endpointy z grup \textit{Konwersacje} oraz \textit{Dokumenty i zapytania} 
-wymagają autoryzacji za pomocą tokenu JWT przekazywanego w nagłówku 
+funkcjonalne.
 \texttt{Authorization: Bearer <token>}.
 \begin{table}[H]
 \centering
@@ -67,7 +64,10 @@ GET & /api/health & Sprawdzenie statusu serwera \\
 \end{tabular}
 \end{table}
 
-
+ Tabela~\ref{tab:endpoints} przedstawia pełną listę 
+dostępnych endpointów.
+Wszystkie endpointy z grup \textit{Konwersacje} oraz \textit{Dokumenty i zapytania} 
+wymagają autoryzacji za pomocą tokenu JWT przekazywanego w nagłówku 
 
 \newpage
 \subsection{Modele bazy danych}

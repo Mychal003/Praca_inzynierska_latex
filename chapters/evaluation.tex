@@ -1,7 +1,7 @@
 \chapter{Metryki i ewaluacja systemu}\label{chapter:methodology}
 
 
-Niniejszy rozdział przedstawa użyte metryki oraz wyniki ewaluacji zaimplementowanego systemu RAG. Wyniki konfiguracji zostały przeprowadzone lokalnie i potwierdzają skuteczności systemu.
+Niniejszy rozdział przedstawia użyte metryki oraz wyniki ewaluacji zaimplementowanego systemu RAG. Eksperymenty zostały przeprowadzone lokalnie i potwierdzają skuteczności systemu.
 
 Poniżej opisano przygotowany zbiór danych testowych, zdefiniowano zastosowane metryki dla modułów wyszukiwania (Retrieval) i generacji, a następnie przedstawiono szczegółowe wyniki wydajności systemu oraz analizę wpływu inżynierii promptów na jakość odpowiedzi.
 
@@ -235,7 +235,6 @@ był kilkoma czynnikami:
     \item Odpowiednia długość do testowania systemu RAG
 \end{itemize}
 
-\newpage
 \subsection{Pytania testowe}
 
 Przygotowano 25 pytań testowych podzielonych na trzy kategorie:
@@ -441,8 +440,7 @@ wyszukiwania informacji (information retrieval trade-off).
 \newpage
 \subsection{Podsumowanie metryk wyszukiwania}
 
-Tabela~\ref{tab:retrieval_results} przedstawia szczegółowe wyniki 
-dla różnych wartości k.
+
 
 \begin{table}[H]
 \centering
@@ -462,10 +460,12 @@ MRR & \multicolumn{4}{c|}{0.920} \\
 \end{tabular}
 \end{table}
 
+Tabela~\ref{tab:retrieval_results} przedstawia szczegółowe wyniki 
+dla różnych wartości k.
+
 \subsection{Jakość rankingu (NDCG)}
 
-Rysunek~\ref{fig:ndcg} przedstawia jak zmienia się metryka NDCG 
-(Normalized Discounted Cumulative Gain) wraz ze wzrostem k.
+
 
 \begin{figure}[H]
 \centering
@@ -473,6 +473,9 @@ Rysunek~\ref{fig:ndcg} przedstawia jak zmienia się metryka NDCG
 \caption{Zmiana NDCG w zależności od liczby pobieranych fragmentów}
 \label{fig:ndcg}
 \end{figure}
+
+Rysunek~\ref{fig:ndcg} przedstawia jak zmienia się metryka NDCG 
+(Normalized Discounted Cumulative Gain) wraz ze wzrostem k.
 
 NDCG mierzy jakość rankingu -- czy trafne fragmenty znajdują się 
 na wysokich pozycjach. Wysoka wartość NDCG@1 = 0.880 oznacza, 
@@ -543,7 +546,7 @@ Dobór parametrów procesu RAG został przeprowadzony metodą eksperymentalną, 
 
 \subsection{Ogólna jakość odpowiedzi}
 
-Tabela~\ref{tab:final_results} przedstawia końcowe wyniki systemu zmierzone za pomocą metryk automatycznych oraz oceny sędziowskiej LLM.
+
 
 \begin{table}[H]
 \centering
@@ -567,6 +570,8 @@ Success Rate & 100\% \\
 \hline
 \end{tabular}
 \end{table}
+
+Tabela~\ref{tab:final_results} przedstawia końcowe wyniki systemu zmierzone za pomocą metryk automatycznych oraz oceny sędziowskiej LLM.
 
 System osiąga bardzo wysokie wyniki we wszystkich wymiarach oceny LLM Judge, \\z ogólną oceną jakości (Overall) na poziomie 0.938 (w skali 0-1). 
 
@@ -600,7 +605,7 @@ Troubleshooting & 0.371 & 0.753 & 0.883 & 3 \\
 \end{tabular}
 \end{table}
 
-Należy zauważyć, że klasyfikacja pytań w powyższej tabeli opiera się na decyzjach podjętych przez autonomiczny moduł \textbf{Query Classifier} w trakcie działania systemu, a nie na statycznym podziale ze zbioru danych. 
+Należy zauważyć, że klasyfikacja pytań w powyższej tabeli opiera się na decyzjach podjętych przez autonomiczny moduł \textbf{Query Classifier}~\ref{lst:classifier} w trakcie działania systemu, a nie na statycznym podziale ze zbioru danych. 
 
 W trakcie eksperymentu system zaklasyfikował:
 \begin{itemize}
@@ -609,13 +614,13 @@ W trakcie eksperymentu system zaklasyfikował:
     \item 3 pytania jako \textit{Troubleshooting} (wobec 8 w założeniach).
 \end{itemize}
 
-Przesunięcie to (szczególnie z kategorii \textit{Troubleshooting} do \textit{Procedural}) wynika z faktu, że wiele problemów diagnostycznych w dokumentacji technicznej rozwiązywanych jest poprzez konkretną procedurę (np. "Reset urządzenia"). Model językowy pełniący rolę klasyfikatora słusznie zinterpretował intencję jako prośbę o instrukcję, dobierając odpowiedni prompt proceduralny, co przełożyło się na wysoką jakość odpowiedzi końcowych.
+Przesunięcie to (szczególnie z kategorii \textit{Troubleshooting} do \textit{Procedural}) wynika z faktu, że wiele problemów diagnostycznych w dokumentacji technicznej rozwiązywanych jest poprzez konkretną procedurę (np. "Reset urządzenia"). Model językowy pełniący rolę klasyfikatora słusznie zinterpretował intencję jako prośbę o instrukcję, dobierając odpowiedni prompt proceduralny, co końcowo przełożyło się na wysoką jakość odpowiedzi.
 
 
 \newpage
 \subsection{Analiza wyników względem każdego z 25 pytań testowych}
 
-W celu głębszego zrozumienia działania systemu, przeanalizowano rozkład ocen dla każdego z 25 pytań testowych. Rysunek~\ref{fig:metrics_heatmap} przedstawia mapę ciepła (heatmap) zestawiającą metryki automatyczne z ocenami sędziego LLM.
+W celu głębszego zrozumienia działania systemu, przeanalizowano rozkład ocen dla każdego z 25 pytań testowych. 
 
 \begin{figure}[H]
 \centering
@@ -623,7 +628,7 @@ W celu głębszego zrozumienia działania systemu, przeanalizowano rozkład ocen
 \caption{Mapa ciepła (heatmap) przedstawiająca wartości wszystkich metryk dla poszczególnych pytań}
 \label{fig:metrics_heatmap}
 \end{figure}
-
+Rysunek~\ref{fig:metrics_heatmap} przedstawia mapę ciepła (heatmap) zestawiającą metryki automatyczne z ocenami sędziego LLM.
 Analiza wykresu pozwala na sformułowanie kilku obserwacji:
 
 \begin{itemize}
@@ -649,7 +654,6 @@ W trakcie prac nad systemem zaobserwowano, że kluczowym czynnikiem wpływający
 
 \subsection{Analiza porównawcza}
 
-Zmiana podejścia z restrykcyjnego na elastyczne przyniosła znaczącą poprawę w kluczowych metrykach wydajności systemu (Tabela~\ref{tab:prompt_comparison}).
 
 \begin{table}[h]
 \centering
@@ -666,13 +670,14 @@ LLM Overall & 0.642 & 0.938 & +0.296 \\
 \hline
 \end{tabular}
 \end{table}
+Zmiana podejścia z restrykcyjnego na elastyczne przyniosła znaczącą poprawę w kluczowych metrykach wydajności systemu (Tabela~\ref{tab:prompt_comparison}).
 
 Najważniejszym skutkiem optymalizacji promptu był wzrost wskaźnika sukcesu (\textbf{Success Rate}) z 68\% do 100\%. Przy prompcie restrykcyjnym model zbyt ostrożnie interpretował braki w kontekście, często odmawiając odpowiedzi na pytania, na które informacje w rzeczywistości znajdowały się w dokumencie.
 
 Zastosowanie promptu elastycznego pozwoliło na:
 \begin{enumerate}
     \item \textbf{Wzrost poprawności merytorycznej} (LLM Correctness wzrósł z 63.4\% do 96\%) -- model zaczął efektywnie wykorzystywać dostępne fragmenty.
-    \item \textbf{Zachowanie wysokiego ugruntowania} -- wbrew obawom, poluzowanie restrykcji \\nie spowodowało wzrostu halucynacji (Groundedness wzrosło z 0.880 do 1.000).
+    \item \textbf{Zachowanie wysokiego ugruntowania} -- wbrew obawom, złagodzenie zasad nie spowodowało wzrostu halucynacji (Groundedness wzrosło z 0.880 do 1.000).
 \end{enumerate}
 
 Uzyskane wyniki wskazują, że inżynieria promptów (prompt engineering) pełni bardzo istotną rolę w systemach RAG, mając często większy wpływ na końcową percepcję jakości przez użytkownika niż mikro-optymalizacja parametrów wyszukiwania.

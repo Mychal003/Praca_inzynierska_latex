@@ -7,3 +7,17 @@ Opracowane rozwiązanie przetwarza pliki w formacie PDF, dzieli je na fragmenty 
 W ramach przedstawionej pracy inżynierskiej przeprowadzono ewaluację systemu, wykorzystując metryki wyszukiwania (Precision, Recall, MRR, NDCG) oraz metryki generacji (ROUGE, Semantic Similarity, LLM Judge).
 
 Najważniejsza konkluzja przeprowadzonej ewaluacji pozwala przypuszczać, że odpowiednie projektowanie promptów (prompt engineering) odegrało kluczową rolę w eliminacji błędów \\i zapewnieniu poprawności merytorycznej odpowiedzi. Zoptymalizowany system osiągnął 93.8\% ogólnej jakości według oceny LLM Judge, przy zachowaniu 100\% skuteczności \\w udzielaniu odpowiedzi.
+
+
+\section*{Abstract}
+
+The presented engineering thesis contains the design and implementation of a RAG (Retrieval-Augmented Generation) system for automatic answer generation.
+While answering user questions based on technical documentation, the system combines information retrieval with answer generation using Large Language Models (LLM).
+
+The developed solution processes PDF files, divides them into fragments (chunks), creates vector representations (embeddings), and saves them in a FAISS database.
+After receiving a user query, the system retrieves the most matching document fragments and then generates an answer using the GPT-4o model.
+
+As part of the presented thesis, a system evaluation was conducted using retrieval metrics (Precision, Recall, MRR, NDCG) and generation metrics (ROUGE, Semantic Similarity, LLM Judge).
+
+The most important conclusion of the evaluation suggests that appropriate prompt engineering played a key role in eliminating errors and ensuring the substantive correctness of answers.
+The optimized system achieved 93.8\% overall quality according to the LLM Judge assessment, while maintaining a 100\% Success Rate in providing answers.
